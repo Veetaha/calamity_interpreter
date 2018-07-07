@@ -1,0 +1,83 @@
+Calamity = {statement};
+
+statement = funcdef | vardecl | alter_st | cycle_st | block_st | blank_st | expression_st | return_st;
+funcdef = "function", IDENTIFIER, func_params, statement;
+func_params = "(", [id_list], ")";
+id_list = IDENTIFIER,  {id_enum};
+id_enum = ",", IDENTIFIER;
+
+vardecl = "var", IDENTIFIER, [initialization], ";";
+initialization = "=", expression;
+alter_st = "if",  "(", expression, ")", statement, [else_st];
+else_st = "else", statement;
+cycle_st = "while", "(", expression, ")", statement;
+block_st = "{", {statement}, "}";
+blank_st = ";";
+return_st = "return", expression, ";";
+expression_st = expression, ";";
+expression = assign;
+
+
+assign = or, [assign_ap];
+assign_ap = ("=" | "+=" | "-=" | "*=" | "/="), or, [assign_ap];
+
+or = and, [or_ap];
+or_ap = "||", and, [or_ap];
+
+and = equaling, [and_ap];
+add_ap = "&&", equaling, [and_ap];
+
+equaling = comparison, [equaling_ap];
+equaling_ap = ("==" | "!=" | "===" | "!=="), comparison, [equaling_ap];
+
+comparison = add, [comparison_ap];
+comparison_ap = (">" | "<" | "<=" | ">="), add, [comparison_ap];
+
+add = mult, [add_ap];
+add_ap = ("+" | "-"), mult, [add_ap],;
+
+mult = unary, [mult_ap];
+mult_ap = ("*" | "/" | "%"), unary, [mult_ap];
+
+
+unary = ["+" | "-" | "!"], power;
+
+power = subscript, [power_ap];
+power_ap = "**", subscript, [power_ap];
+
+subscript = primary, [subscript_ap];
+subscript_ap = "[", expression, "]", [subscript_ap];
+
+primary = literal | parentheses | var_or_call ;
+
+literal = value_identifier | string_or_number | list_literal | function_literal | object_literal;
+value_identifier = "true" | "false" | "null" | "undefined" | "NaN" | "Infinity" | "endl";
+string_or_number = STRING | NUMBER;
+
+list_literal = "[", [expr_list], "]";
+expr_list = expression, {expr_enum};
+expr_enum = ",", expression;
+
+function_literal = "function", [IDENTIFIER], func_params, statement;
+
+object_literal = "{" [object_properties] "}";
+object_propname = IDENTIFIER | string_or_number | ("[", expression, "]");
+object_properties = object_propname, ":", expression, [object_proplist];
+object_proplist = ",", object_propname, ":", expression, [object_proplist];
+
+parentheses = "(", expression, ")";
+
+var_or_call = IDENTIFIER, [function_call];
+function_call = "(", [expr_list] ")";
+
+
+
+
+
+
+
+
+
+
+
+

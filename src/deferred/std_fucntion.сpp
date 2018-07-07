@@ -1,0 +1,755 @@
+#include <std_function.h>
+#include <mem.h>
+#include <error.h>
+#include <floatingpoint.h>
+#include <sstring.h>
+#include <math.h>
+#include <stack.h>
+
+Function * Function_new(StdRoutine func){
+    Function * newbie = Mem_malloc(sizeof(Function));
+    newbie->f = func;
+    return newbie;
+}
+void Function_free(Function * self){
+    Debug_exists(self);
+    //
+    free(self);
+}
+StdRoutine Function_at(Function * self){
+    Debug_exists(self);
+    //
+    return self->f;
+}
+
+
+#define CHECK(...)                   __CHECK(-1L, __VA_ARGS__)
+#define EXPECT(expr, errorMsg, errorTreeNode...) __EXPECT(-1L, expr, errorMsg, errorTreeNode)
+
+static signed long long getIndex(Calamity * prog, Tree * ast){
+    auto__Var * entity = evaluate_new(prog, ast);
+    CHECK(entity);
+    EXPECT(Var_isNumber(entity),
+        "index designator results in non-numeric value", ast
+    );
+    //
+    signed long long index = Var_isBoolean(entity)
+        ? (signed long long)Var_boolean(entity)
+        : (signed long long)Var_double(entity);
+
+    EXPECT(index >= 0, 
+            "index designator results in a negative number", ast
+    );
+    //
+    return index;
+}
+
+
+#undef CHECK
+#undef EXPECT  
+#define CHECK(...)                   __CHECK(NULL, __VA_ARGS__)
+#define EXPECT(expr, errorMsg, ...) __EXPECT(NULL, expr, errorMsg, __VA_ARGS__)
+
+Var * std_getter   (Calamity * prog, Tree * ast){
+    Debug_suppose(Tree_childrenSize(ast) == 2, "getter called with not 2 arguments");
+    Debug_suppose(
+            AstNode_typeAt(ast->val) == AstNodeType_PRIM_ARGLIST,
+            "getter called at non prim_arglist"
+    );
+    //
+    auto__Var * entity = evaluate_new(prog, Tree_childAt(ast, 0));
+    CHECK(entity);
+    signed long long index = getIndex(prog, Tree_childAt(ast, 1));
+    CHECK(index >= 0);
+    switch (Var_rawType(entity)){
+        case Type_VECTOR:{
+            EXPECT(index < Vector_size(Var_vector(entity)),
+                "getter array index out of bounds exception (segmentation fault)", ast
+            );
+            //
+            return Vector_removeAt(Var_vector(entity), index);
+        }
+        case Type_STRING:{
+            EXPECT(index < String_length(Var_string(entity)),
+                "getter string index out of bounds exception (segmentation fault)", ast
+            );
+            //
+            Var_setSingleChar(entity, String_at(Var_string(entity), (size_t)index));
+            return_autoptr (entity);
+        }
+        default: {
+            EXPECT(false,
+                "dimension designator exception (segmentation fault)", ast
+			);
+            //
+            return_autoptr (entity);
+        }
+    }
+}
+Var * std_ranger   (Calamity * prog, Tree * ast){
+    Debug_suppose(Tree_childrenSize(ast) == 3, "ranger called with not 3 arguments");
+    Debug_suppose(AstNode_typeAt(ast->val) == AstNodeType_PRIM_ARGLIST, 
+        "ranger called at non prim_arglist"
+	);
+    auto__Var * entity = evaluate_new(prog, Tree_childAt(ast, 0));
+    CHECK(entity);
+
+    signed long long leftIndex = getIndex(prog, Tree_childAt(ast, 1));
+    CHECK(leftIndex >= 0);
+    signed long long rightIndex = getIndex(prog, Tree_childAt(ast, 2));
+    CHECK(rightIndex >= 0);
+
+    EXPECT(rightIndex >= leftIndex, 
+        "ranger right operand is less then left", 
+            Tree_childAt(ast, 2)
+	);
+    //
+    switch (Var_rawType(entity)){
+        case Type_VECTOR:{
+            EXPECT(rightIndex <= Vector_size(Var_vector(entity)),
+                "ranger array index out of bounds exception (segmentation fault)", 
+                    Tree_childAt(ast, 2)
+			);
+            //
+            Vector_cut(Var_vector(entity), leftIndex, rightIndex);
+            return_autoptr (entity);
+        }
+        case Type_STRING:{
+            EXPECT(rightIndex < String_length(Var_string(entity)),
+                "ranger string index out of bounds exception (segmentation fault)", 
+                    Tree_childAt(ast, 2)
+            );
+            //
+            String_cut(Var_string(entity), (size_t)leftIndex, (size_t)rightIndex);
+            return_autoptr (entity);
+        }
+        default:{
+            EXPECT(false, 
+                "dimension designator exception (segmentation fault)", 
+                    Tree_childAt(ast, 2)
+            );
+            //
+            return_autoptr (entity);
+        }
+    }
+}
+
+
+Var * std_digify   (Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) == 1, 
+        "digify function is defined only for 1 argument: digify(entity)", 
+            ast);
+    //
+    auto__Var * entity = evaluate_new(prog, Tree_childAt(argList, 0));
+    CHECK(entity);
+    switch (Var_rawType(entity)){
+        case Type_STRING:{
+            auto__Vector(double) * numbers = String_parseNewNumbers(Var_string(entity));
+            Var_resetType(entity, Type_VECTOR);
+            foreach_v(double, number, numbers){
+                Vector_emplaceBack(Var_vector(entity), Type_NUMBER);
+            }
+            List_free(numbers);
+            return_autoptr (entity);
+        }
+        case Type_CHARACTER:{
+            Var_setFloat(entity, Var_charAt(entity));
+            return entity;
+        }
+        case Type_UNDEFINED:
+        case Type_FLOAT:{
+            return entity;
+        }
+        case Type_BOOLEAN:{
+            Var_setFloat(entity, Var_boolAt(entity) == true);
+            return entity;
+        }
+        case Type_VECTOR:{
+            Var_setUndef(entity);
+            return entity;
+        }
+    }
+    Debug_shutdown("std_digify unhandled case");
+    return NULL;
+}
+static Var * std_insertVar(Calamity * prog, Tree * argList){
+    const char * name =  String_readOnly(AstNode_nameAt(Tree_childAt(argList, 0)->val));
+    EXPECT(Dict_contains(prog->vars, name), 
+        "use of undeclared variable identifier", 
+            Tree_childAt(argList, 0)
+    );
+    Var * storage = Dict_get(prog->vars, name);
+    signed long long index = getIndex(prog, Tree_childAt(argList, 1));
+    CHECK(index != -1L);
+    Var * entity = evaluate_new(prog, Tree_childAt(argList, 2));
+    CHECK(entity);
+    switch (Var_rawType(storage)){
+        case Type_VECTOR:{
+            EXPECT(index <= Vector_size(Var_vector(storage)),
+                "insert array index out of bounds exception", 
+                    Tree_childAt(argList, 1),
+                        entity);
+
+            Vector_insert(Var_vector(storage), index, entity);
+            break;
+        }
+        case Type_STRING:{
+            EXPECT(index <= String_length(Var_string(storage)),
+                "insert string index out of bounds exception", 
+                    Tree_childAt(argList, 1),
+                        entity);
+            //
+            String * str = String_new();
+            Var_appendToString(str, entity);
+            String_insertString(Var_string(storage), index, str);
+            String_free(str);
+            Var_free(entity);
+            break;
+        }
+        default:{
+            EXPECT(index == 0, 
+                "insert index for single primitive type value exceeds 0", 
+                    Tree_childAt(argList, 1),
+                        entity); 
+            Var * oldStorage = Var_new(Type_UNDEFINED);
+            Var_memCopy(oldStorage, storage);
+            Var_memLeakUndef(storage);
+            Var_resetType(storage, Type_VECTOR);
+            List_addLast(Var_listAt(storage), oldStorage);
+            List_addLast(Var_listAt(storage), entity);
+            break;
+        }
+    }
+    return Var_newCopyOf(storage);
+}
+Var * std_insert   (Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) == 3, 
+        "insert function is defined only for 3 arguments: insert(dest, index, entity)", 
+            ast);
+    //
+    if (AstNode_typeAt(Tree_childAt(argList, 0)->val) == AstNodeType_IDENTIFIER
+        && Tree_childrenSize(Tree_childAt(argList, 0)) == 0){
+        return std_insertVar(prog, argList);
+    }
+    //   
+    Var * storage = evaluate_new(prog, Tree_childAt(argList, 0));
+    CHECK(storage);
+
+    signed long long index = getIndex(prog, Tree_childAt(argList, 1));
+    CHECK(index != -1L,
+            storage);
+
+    Var * entity = evaluate_new(prog, Tree_childAt(argList, 2));
+    CHECK(entity,
+            storage);
+
+    switch (Var_typeAt(storage)){
+        case Type_VECTOR:{
+            EXPECT(index <= List_size(Var_listAt(storage)),
+                "insert array index out of bounds exception", 
+                    Tree_childAt(argList, 1),
+                        storage, entity);
+
+            List_insert(Var_listAt(storage), index, entity);
+            break;
+        }
+        case Type_STRING:{
+            EXPECT(index <= String_length(Var_stringAt(storage)),
+                "insert string index out of bounds exception", 
+                    Tree_childAt(argList, 1),
+                        storage, entity);
+
+            if (Var_typeAt(entity) == Type_CHARACTER 
+                    && Var_charAt(entity) == '\0'){
+                //
+                Var_free(entity);
+                String_reduce(Var_stringAt(storage), index);
+                break;
+            }
+            String * str = String_new();
+            Var_appendToString(str, entity);
+            String_insertString(Var_stringAt(storage), index, str);
+            String_free(str);
+            Var_free(entity);
+            break;
+        }
+        default:{
+            EXPECT(index == 0, 
+                "insert index for single primitive type value exceeds 0", 
+                    Tree_childAt(argList, 1),
+                        storage, entity); 
+            //
+            Var * newList = Var_new(Type_VECTOR);
+            List_addLast(Var_listAt(newList), storage);
+            List_addLast(Var_listAt(newList), entity);
+            return newList;
+        }
+    }
+    return storage;    
+}
+
+Var * std_print    (Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) > 0, 
+        "print function is defined only for 1 or more arguments: print(entity, ...)", 
+            ast);
+    //
+    for (size_t i = 0; i < Tree_childrenSize(argList); ++i){
+        Var * entity = evaluate_new(prog, Tree_childAt(argList, i));
+        CHECK(entity);
+        Var_print(entity);
+        Var_free(entity);
+    }
+    return Var_new(Type_UNDEFINED);
+}
+
+Var * std_write    (Calamity * prog, Tree * ast){
+    Tree * arglist = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(arglist) > 1, 
+        "write function is defined only for 2 or more arguments: write(filepath, entity ...)", 
+            ast);
+    //
+    Var * path = evaluate_new(prog, Tree_childAt(arglist, 0));
+    CHECK(path);
+    EXPECT(Var_typeAt(path) == Type_STRING,
+        "write function path parameter results in non-string type value",
+            ast,
+                path);
+    //
+    FILE * dest = fopen(String_readOnly(Var_stringAt(path)), "w");
+    Var_free(path);
+    for (size_t i = 1; i < Tree_childrenSize(arglist); ++i){
+        Var * entity = evaluate_new(prog, Tree_childAt(arglist, i));
+        if (!entity){
+            fclose(dest);
+            return NULL;
+        }
+        Var_writeTo(dest, entity);
+        Var_free(entity);
+    }
+
+    fclose(dest);
+    return Var_new(Type_UNDEFINED);
+}
+
+Var * std_read     (Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) <= 1, 
+        "read function is defined only for 0 or 1 argument: read(file)", 
+            ast);
+    //
+    if (Tree_childrenSize(argList) == 0){
+        Var * string = Var_new(Type_STRING);
+        String_getLine(Var_stringAt(string));
+        return string;
+    } else {
+        Var * path = evaluate_new(prog, Tree_childAt(argList, 0));
+        CHECK(path);
+        EXPECT(Var_typeAt(path) == Type_STRING, 
+            "read argument rusults in non-string type value", 
+                Tree_childAt(argList, 0),
+                    path);
+        //
+        FILE * file = fopen(String_readOnly(Var_stringAt(path)), "r");
+        if (!file){
+            Var_setUndef(path);
+            return path;
+        }
+        String_readFrom(file, Var_stringAt(path));
+        fclose(file);
+        return path;
+    }
+}
+static Var * std_removeVar(Calamity * prog, Tree * argList){
+    const char * name =  String_readOnly(AstNode_nameAt(Tree_childAt(argList, 0)->val));
+    EXPECT(Dict_contains(prog->vars, name), 
+        "use of undeclared variable identifier", 
+            Tree_childAt(argList, 0));
+    //
+    Var * storage = Dict_get(prog->vars, name);
+    signed long long index = getIndex(prog, Tree_childAt(argList, 1));
+    CHECK(index != -1L);
+    switch (Var_typeAt(storage)){
+        case Type_VECTOR:{
+            EXPECT(index < List_size(Var_listAt(storage)),
+                "remove array index out of bounds exception", 
+                    Tree_childAt(argList, 1));
+            //
+            return List_removeAt(Var_listAt(storage), index);
+        }
+        case Type_STRING:{
+            EXPECT(index < String_length(Var_stringAt(storage)),
+                "remove string index out of bounds exception", 
+                    Tree_childAt(argList, 1));
+            //
+            Var * ch = Var_new(Type_CHARACTER);
+            Var_setChar(ch, String_delchar(Var_stringAt(storage), index));
+            return ch;
+        }
+        default:{
+            EXPECT(index == 0, 
+                "remove index for single primitive type value exceeds 0", 
+                    Tree_childAt(argList, 1)); 
+            //
+            Var * removed = Var_new(Type_UNDEFINED);
+            Var_memDuplicate(removed, storage);
+            Var_memLeakUndef(storage);
+            return removed;
+        }
+    }
+}
+
+Var * std_remove   (Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) == 2, 
+        "remove function is defined only for 2 arguments: remove(entity, index)", 
+            ast);
+    //
+    if (AstNode_typeAt(Tree_childAt(argList, 0)->val) == AstNodeType_IDENTIFIER
+        && Tree_childrenSize(Tree_childAt(argList, 0)) == 0){
+            return std_removeVar(prog, argList);
+    }
+    //    
+    Var * storage = evaluate_new(prog, Tree_childAt(argList, 0));
+    CHECK(storage);
+    signed long long index = getIndex(prog, Tree_childAt(argList, 1));
+    CHECK(index != -1L, storage);
+    switch (Var_typeAt(storage)){
+        case Type_VECTOR:{
+            EXPECT(index < List_size(Var_listAt(storage)),
+                "remove array index out of bounds exception", 
+                    Tree_childAt(argList, 1),
+                        storage);
+            //
+            Var * removed = List_removeAt(Var_listAt(storage), index);
+            Var_free(storage);
+            return removed;
+        }
+        case Type_STRING:{
+            EXPECT(index < String_length(Var_stringAt(storage)),
+                "remove string index out of bounds exception", 
+                    Tree_childAt(argList, 1),
+                        storage);
+            //
+            Var_setChar(storage, String_at(Var_stringAt(storage), index));
+            return storage;
+        }
+        default:{
+            EXPECT(index == 0, 
+                "remove index for single primitive type value exceeds 0", 
+                    Tree_childAt(argList, 1),
+                        storage); 
+            //
+            return storage;
+        }
+    }
+}
+
+Var * std_sizeof   (Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) == 1, 
+        "sizeof function is defined only for 1 argument: sizeof(entity)", 
+            ast);
+    //
+    Var * entity = evaluate_new(prog, Tree_childAt(argList, 0));
+    CHECK(entity);
+    switch (Var_typeAt(entity)){
+        case Type_VECTOR:{
+            Var_setFloat(entity, List_size(Var_listAt(entity)));
+            break;
+        }
+        case Type_STRING:{
+            Var_setFloat(entity, String_length(Var_stringAt(entity)));
+            break;
+        }
+        default:{ // case single primitive bool char float or undefined
+            Var_setFloat(entity, 1);
+            break;
+        }
+    }
+    return entity;
+}
+
+Var * std_sqrt     (Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) == 1, 
+        "sqrt function is defined only for 1 numeric argument: sizeof(entity)", 
+            ast);
+    //
+    Var * arg = evaluate_new(prog, Tree_childAt(argList, 0));
+    CHECK(arg);
+    EXPECT(Var_isNumber(arg),
+        "sqrt argument results in non-numeric value", 
+            Tree_childAt(argList, 0), 
+                arg);
+    switch (Var_typeAt(arg)){
+        case Type_CHARACTER:{
+            EXPECT(Var_charAt(arg) >= 0,
+                "sqrt argument results in a negative number",
+                    Tree_childAt(argList, 0),
+                        arg)Var_charAt;
+            Var_setFloat(arg, sqrt((float)Var_charAt(arg)));
+            break;
+        }
+        default:{
+            EXPECT(Var_floatAt(arg) >= 0, 
+                "sqrt argument results in a negative number",
+                    Tree_childAt(argList, 0),
+                        arg);
+            Var_setFloat(arg, sqrt(Var_floatAt(arg)));
+            break;
+        }
+    }
+    return arg;
+}
+
+Var * std_stringify(Calamity * prog, Tree * ast){
+    Tree * argList = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(argList) >= 1, 
+        "stringify function is defined only for 1 or more arguments: stringify(entity, ...)", 
+            ast);
+    //
+    Var * string = Var_new(Type_STRING);
+    for (size_t i = 0; i < Tree_childrenSize(argList); ++i){
+        Var * entity = evaluate_new(prog, Tree_childAt(argList, i));
+        CHECK(entity, string);
+        Var_appendToString(Var_stringAt(string), entity);
+        Var_free(entity);
+    }
+    return string;
+}
+
+Var * std_typeof(Calamity * prog, Tree * ast){
+    Tree * arglist = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(arglist) == 1, 
+        "typeof function is defined only for 1 argument: typeof(entity)", 
+            ast);
+    //
+    Var * value = evaluate_new(prog, Tree_childAt(arglist, 0));
+    CHECK(value);
+    switch (Var_typeAt(value)){
+        case Type_BOOLEAN:{
+            Var_resetType(value, Type_STRING);
+            String_append(Var_stringAt(value), "boolean");
+            return value;
+        }
+        case Type_CHARACTER:{
+            Var_resetType(value, Type_STRING);
+            String_append(Var_stringAt(value), "character");
+            return value;
+        }
+        case Type_FLOAT:{
+            Var_resetType(value, Type_STRING);
+            String_append(Var_stringAt(value), "number");
+            return value;
+        }
+        case Type_STRING:{
+            String_rewrite(Var_stringAt(value), "string");
+            return value;
+        }
+        case Type_VECTOR:{
+            Var_resetType(value, Type_STRING);
+            String_append(Var_stringAt(value), "array");
+            return value;
+        }
+        case Type_UNDEFINED:{
+            Var_resetType(value, Type_STRING);
+            String_append(Var_stringAt(value), "undefined");
+            return value;
+        }
+    }
+    Debug_shutdown("Unhandled type for typeof operator");
+    return NULL;
+}
+
+Var * std_escape(Calamity * prog, Tree * ast){
+    Tree * arglist = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(arglist) == 1, 
+        "escape function is defined only for 1 argument: escape(status)", 
+            ast);
+    Var * status = evaluate_new(prog, Tree_childAt(arglist, 0));
+    CHECK(status);
+    prog->status = status;
+    prog->state = ProgState_ESCAPE;
+    return NULL;
+}
+
+Var * Calamity_appendVarStorage(Calamity * prog, Tree * ast, Var * entity){
+    Stack * dimensions = Stack_new();
+    Stack_push(dimensions, ast);
+    while (AstNode_typeAt(Tree_at(Stack_peek(dimensions))) == AstNodeType_PRIM_ARGLIST){
+        Stack_push(dimensions, Tree_childAt(Stack_peek(dimensions), 0));
+    }
+    Tree * idNode = Stack_pop(dimensions);
+    if (AstNode_typeAt(Tree_at(idNode)) != AstNodeType_IDENTIFIER || !Tree_isLeaf(idNode)){
+        Calamity_setError("can not append to an rvalue", ast->val, prog);
+        goto exception;
+    }
+    const char * name = String_readOnly(AstNode_nameAt(Tree_at(idNode)));
+    if (!Dict_contains(prog->vars, name)){
+        Calamity_setError("use of undeclared variable identifier", idNode->val, prog);
+        goto exception;
+    }
+    Var * storage = Dict_get(prog->vars, name);
+    while(!Stack_isEmpty(dimensions)){
+        Tree * operator = Stack_pop(dimensions);
+        if (Tree_childrenSize(operator) != 2){
+            Calamity_setError("can not append to range (segmentation fault)", idNode->val, prog);
+            goto exception;
+        }
+        signed long long index = getIndex(prog, Tree_childAt(operator, 1));
+        if (index < 0) goto exception;
+        switch (Var_typeAt(storage)){
+            case Type_VECTOR:{
+                if (index >= List_size(Var_listAt(storage))){
+                    Calamity_setError("getter array index out of bounds exception (segmentation fault)", idNode->val, prog);
+                    goto exception;
+                }
+                storage = List_at(Var_listAt(storage), index);
+                break;
+            }
+            case Type_STRING:{
+                if (!Stack_isEmpty(dimensions)){                   
+                    Calamity_setError("dimension designator exception (segmentation fault)", idNode->val, prog);
+                    goto exception;
+                }
+                if (index >= String_length(Var_stringAt(storage))){
+                    Calamity_setError("string index out of bounds exception", idNode->val, prog);
+                    goto exception;
+                }
+                if (Var_typeAt(entity) != Type_STRING){
+                    String * stringified = String_new();
+                    Var_appendToString(stringified, entity);
+                Var_free(entity);
+                    String_insertString(Var_stringAt(storage), index, stringified);    
+                    String_free(stringified);
+                } else {
+                    String_insertString(Var_stringAt(storage), index, Var_stringAt(entity));
+                    Var_free(entity);
+                }
+                Stack_free(dimensions);
+                return Var_newCopyOf(storage);
+            }
+            default:{
+                // if (!Stack_isEmpty(dimensions)){
+                    Calamity_setError("dimension designator exception (segmentation fault)", idNode->val, prog);
+                    goto exception;
+                // }
+                break;
+            }
+        }
+    }
+    Var_memAppend(storage, entity);
+    Stack_free(dimensions);
+    return Var_newCopyOf(storage);
+    exception:
+    Var_free(entity);
+    Stack_free(dimensions);
+    return NULL;
+}
+
+Var * Calamity_setVarStorage(Calamity * prog, Tree * ast, Var * entity){
+    Stack * dimensions = Stack_new();
+    Stack_push(dimensions, ast);
+    while (AstNode_typeAt(Tree_at(Stack_peek(dimensions))) == AstNodeType_PRIM_ARGLIST){
+        Stack_push(dimensions, Tree_childAt(Stack_peek(dimensions), 0));
+    }
+    Tree * idNode = Stack_pop(dimensions);
+    if (AstNode_typeAt(Tree_at(idNode)) != AstNodeType_IDENTIFIER || !Tree_isLeaf(idNode)){
+        Calamity_setError("can not assign to an rvalue", ast->val, prog);
+        goto exception;
+    }
+    const char * name = String_readOnly(AstNode_nameAt(Tree_at(idNode)));
+    if (!Dict_contains(prog->vars, name)){
+        Calamity_setError("use of undeclared variable identifier", idNode->val, prog);
+        goto exception;
+    }
+    Var * storage = Dict_get(prog->vars, name);
+    while(!Stack_isEmpty(dimensions)){
+        Tree * operator = Stack_pop(dimensions);
+        if (Tree_childrenSize(operator) != 2){
+            Calamity_setError("can not assign to range (segmentation fault)", idNode->val, prog);
+            goto exception;
+        }
+        signed long long index = getIndex(prog, Tree_childAt(operator, 1));
+        if (index < 0) goto exception;
+        switch (Var_typeAt(storage)){
+            case Type_VECTOR:{
+                if (index >= List_size(Var_listAt(storage))){
+                    Calamity_setError("getter array index out of bounds exception (segmentation fault)", idNode->val, prog);
+                    goto exception;
+                }
+                storage = List_at(Var_listAt(storage), index);
+                break;
+            }
+            case Type_STRING:{
+                if (!Stack_isEmpty(dimensions)){                   
+                    Calamity_setError("dimension designator exception (segmentation fault)", idNode->val, prog);
+                    goto exception;
+                }
+                if (index >= String_length(Var_stringAt(storage))){
+                    Calamity_setError("string index out of bounds exception", idNode->val, prog);
+                    goto exception;
+                }
+                String * stringified = String_new();
+                Var_appendToString(stringified, entity);
+                if (String_length(stringified) > 1){
+                    Calamity_setError("can not expand value to a single character", ast->val, prog);
+                    String_free(stringified);
+                    goto exception;
+                }
+                Var_free(entity);
+                String_set(Var_stringAt(storage), index, String_at(stringified, 0));
+                String_free(stringified);
+                Stack_free(dimensions);
+                return Var_newCopyOf(storage);
+            }
+            default:{
+                // if (!Stack_isEmpty(dimensions)){
+                    Calamity_setError("dimension designator exception (segmentation fault)", idNode->val, prog);
+                    goto exception;
+                // }
+                break;
+            }
+        }
+    }
+    Var_memReassign(storage, entity);
+    Stack_free(dimensions);
+    return Var_newCopyOf(storage);
+    exception:
+    Var_free(entity);
+    Stack_free(dimensions);
+    return NULL;
+}
+
+Var * std_array    (Calamity * prog, Tree * ast){
+    Tree * arglist = Tree_childAt(ast, 0);
+    EXPECT(Tree_childrenSize(arglist) == 1, 
+        "array function is defined only for 1 numeric argument: array(size)", 
+            ast);
+    Var * size = evaluate_new(prog, Tree_childAt(arglist, 0));
+    CHECK(size);
+    EXPECT(Var_isNumber(size),
+        "size argument for array(size) results in non-numeric value", 
+            Tree_childAt(arglist, 0), 
+                size);
+    //
+    signed long long sizeNum = Var_typeAt(size) == Type_CHARACTER 
+        ? Var_charAt(size)
+        : (signed long long)Var_floatAt(size);
+    
+    EXPECT(sizeNum >= 0, 
+            "size argument for array(size) results in a negative number", 
+                Tree_childAt(arglist, 0),
+                    size);
+    //
+    List * array = List_new();
+    while (sizeNum != 0){
+        List_addLast(array, Var_new(Type_UNDEFINED));
+        --sizeNum;
+    }
+    Var_setList(size, array);
+    return size;
+}

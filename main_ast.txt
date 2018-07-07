@@ -1,0 +1,129 @@
+Calamity
+┣━define
+┃ ┣━ID SDELAY_DKR_ZA_MENE_PLEASE
+┃ ┃ ┗━Arglist
+┃ ┃   ┗━ID numbers
+┃ ┗━Block
+┃   ┣━case
+┃   ┃ ┣━!=
+┃   ┃ ┃ ┣━ID typeof
+┃   ┃ ┃ ┃ ┗━Arglist
+┃   ┃ ┃ ┃   ┗━ID numbers
+┃   ┃ ┃ ┗━LL, "array"
+┃   ┃ ┗━return
+┃   ┃   ┗━LL, undefined
+┃   ┣━Declare
+┃   ┃ ┣━ID stat
+┃   ┃ ┗━compound_literal
+┃   ┃   ┣━LL, 0.000000
+┃   ┃   ┣━LL, 0.000000
+┃   ┃   ┗━LL, 0.000000
+┃   ┣━Declare
+┃   ┃ ┣━ID i
+┃   ┃ ┗━LL, 0.000000
+┃   ┣━while
+┃   ┃ ┣━<
+┃   ┃ ┃ ┣━ID i
+┃   ┃ ┃ ┗━ID sizeof
+┃   ┃ ┃   ┗━Arglist
+┃   ┃ ┃     ┗━ID numbers
+┃   ┃ ┗━Block
+┃   ┃   ┣━=
+┃   ┃   ┃ ┣━Prim arglist
+┃   ┃   ┃ ┃ ┣━ID stat
+┃   ┃   ┃ ┃ ┗━LL, 2.000000
+┃   ┃   ┃ ┗━+
+┃   ┃   ┃   ┣━Prim arglist
+┃   ┃   ┃   ┃ ┣━ID stat
+┃   ┃   ┃   ┃ ┗━LL, 2.000000
+┃   ┃   ┃   ┗━Prim arglist
+┃   ┃   ┃     ┣━ID numbers
+┃   ┃   ┃     ┗━ID i
+┃   ┃   ┣━case
+┃   ┃   ┃ ┣━>
+┃   ┃   ┃ ┃ ┣━Prim arglist
+┃   ┃   ┃ ┃ ┃ ┣━ID numbers
+┃   ┃   ┃ ┃ ┃ ┗━ID i
+┃   ┃   ┃ ┃ ┗━Prim arglist
+┃   ┃   ┃ ┃   ┣━ID numbers
+┃   ┃   ┃ ┃   ┗━Prim arglist
+┃   ┃   ┃ ┃     ┣━ID stat
+┃   ┃   ┃ ┃     ┗━LL, 0.000000
+┃   ┃   ┃ ┣━=
+┃   ┃   ┃ ┃ ┣━Prim arglist
+┃   ┃   ┃ ┃ ┃ ┣━ID stat
+┃   ┃   ┃ ┃ ┃ ┗━LL, 0.000000
+┃   ┃   ┃ ┃ ┗━ID i
+┃   ┃   ┃ ┗━case
+┃   ┃   ┃   ┣━<
+┃   ┃   ┃   ┃ ┣━Prim arglist
+┃   ┃   ┃   ┃ ┃ ┣━ID numbers
+┃   ┃   ┃   ┃ ┃ ┗━ID i
+┃   ┃   ┃   ┃ ┗━Prim arglist
+┃   ┃   ┃   ┃   ┣━ID numbers
+┃   ┃   ┃   ┃   ┗━Prim arglist
+┃   ┃   ┃   ┃     ┣━ID stat
+┃   ┃   ┃   ┃     ┗━LL, 1.000000
+┃   ┃   ┃   ┗━=
+┃   ┃   ┃     ┣━Prim arglist
+┃   ┃   ┃     ┃ ┣━ID stat
+┃   ┃   ┃     ┃ ┗━LL, 1.000000
+┃   ┃   ┃     ┗━ID i
+┃   ┃   ┣━=
+┃   ┃   ┃ ┣━ID i
+┃   ┃   ┃ ┗━+
+┃   ┃   ┃   ┣━ID i
+┃   ┃   ┃   ┗━LL, 1.000000
+┃   ┃   ┣━case
+┃   ┃   ┃ ┣━LL, false
+┃   ┃   ┃ ┗━return
+┃   ┃   ┃   ┗━ID unknownFunction
+┃   ┃   ┃     ┗━Arglist
+┃   ┃   ┃       ┗━ID undeclaredIdentifer
+┃   ┃   ┗━case
+┃   ┃     ┣━LL, false
+┃   ┃     ┗━ID escape
+┃   ┃       ┗━Arglist
+┃   ┃         ┗━LL, "Escape from all the functions at the stack"
+┃   ┗━return
+┃     ┗━++
+┃       ┣━++
+┃       ┃ ┣━++
+┃       ┃ ┃ ┣━Prim arglist
+┃       ┃ ┃ ┃ ┣━ID numbers
+┃       ┃ ┃ ┃ ┗━Prim arglist
+┃       ┃ ┃ ┃   ┣━ID stat
+┃       ┃ ┃ ┃   ┗━LL, 0.000000
+┃       ┃ ┃ ┗━Prim arglist
+┃       ┃ ┃   ┣━ID numbers
+┃       ┃ ┃   ┗━Prim arglist
+┃       ┃ ┃     ┣━ID stat
+┃       ┃ ┃     ┗━LL, 1.000000
+┃       ┃ ┗━Prim arglist
+┃       ┃   ┣━ID stat
+┃       ┃   ┗━LL, 2.000000
+┃       ┗━/
+┃         ┣━Prim arglist
+┃         ┃ ┣━ID stat
+┃         ┃ ┗━LL, 2.000000
+┃         ┗━ID i
+┣━Declare
+┃ ┣━ID userInput
+┃ ┗━ID read
+┃   ┗━Arglist
+┣━Declare
+┃ ┣━ID _array
+┃ ┗━ID digify
+┃   ┗━Arglist
+┃     ┗━ID userInput
+┗━ID print
+  ┗━Arglist
+    ┣━++
+    ┃ ┣━ID sizeof
+    ┃ ┃ ┗━Arglist
+    ┃ ┃   ┗━ID _array
+    ┃ ┗━ID SDELAY_DKR_ZA_MENE_PLEASE
+    ┃   ┗━Arglist
+    ┃     ┗━ID _array
+    ┗━LL, '
+'

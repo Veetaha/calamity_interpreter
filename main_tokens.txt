@@ -1,0 +1,21 @@
+❲define❳ ❲ID, SDELAY_DKR_ZA_MENE_PLEASE❳ ❲(❳ ❲ID, numbers❳ ❲)❳ ❲{❳ 
+❲if❳ ❲(❳ ❲ID, typeof❳ ❲(❳ ❲ID, numbers❳ ❲)❳ ❲!=❳ ❲STR, "array"❳ ❲)❳ 
+❲return❳ ❲undefined❳ ❲;❳ 
+❲new❳ ❲ID, stat❳ ❲=❳ ❲[❳ ❲FLOAT, 0❳ ❲,❳ ❲FLOAT, 0❳ ❲,❳ ❲FLOAT, 0❳ ❲]❳ ❲;❳ 
+❲new❳ ❲ID, i❳ ❲=❳ ❲FLOAT, 0❳ ❲;❳ 
+❲while❳ ❲(❳ ❲ID, i❳ ❲<❳ ❲ID, sizeof❳ ❲(❳ ❲ID, numbers❳ ❲)❳ ❲)❳ ❲{❳ 
+❲ID, stat❳ ❲[❳ ❲FLOAT, 2❳ ❲]❳ ❲=❳ ❲ID, stat❳ ❲[❳ ❲FLOAT, 2❳ ❲]❳ ❲+❳ ❲ID, numbers❳ ❲[❳ ❲ID, i❳ ❲]❳ ❲;❳ 
+❲if❳ ❲(❳ ❲ID, numbers❳ ❲[❳ ❲ID, i❳ ❲]❳ ❲>❳ ❲ID, numbers❳ ❲[❳ ❲ID, stat❳ ❲[❳ ❲FLOAT, 0❳ ❲]❳ ❲]❳ ❲)❳ 
+❲ID, stat❳ ❲[❳ ❲FLOAT, 0❳ ❲]❳ ❲=❳ ❲ID, i❳ ❲;❳ 
+❲else❳ ❲if❳ ❲(❳ ❲ID, numbers❳ ❲[❳ ❲ID, i❳ ❲]❳ ❲<❳ ❲ID, numbers❳ ❲[❳ ❲ID, stat❳ ❲[❳ ❲FLOAT, 1❳ ❲]❳ ❲]❳ ❲)❳ 
+❲ID, stat❳ ❲[❳ ❲FLOAT, 1❳ ❲]❳ ❲=❳ ❲ID, i❳ ❲;❳ 
+❲ID, i❳ ❲=❳ ❲ID, i❳ ❲+❳ ❲FLOAT, 1❳ ❲;❳ 
+❲if❳ ❲(❳ ❲false❳ ❲)❳ ❲return❳ ❲ID, unknownFunction❳ ❲(❳ ❲ID, undeclaredIdentifer❳ ❲)❳ ❲;❳ 
+❲if❳ ❲(❳ ❲false❳ ❲)❳ ❲ID, escape❳ ❲(❳ ❲STR, "Escape from all the functions at the stack"❳ ❲)❳ ❲;❳ 
+❲}❳ 
+❲return❳ ❲ID, numbers❳ ❲[❳ ❲ID, stat❳ ❲[❳ ❲FLOAT, 0❳ ❲]❳ ❲]❳ ❲++❳ ❲ID, numbers❳ ❲[❳ ❲ID, stat❳ ❲[❳ ❲FLOAT, 1❳ ❲]❳ ❲]❳ ❲++❳ ❲ID, stat❳ ❲[❳ ❲FLOAT, 2❳ ❲]❳ ❲++❳ ❲ID, stat❳ ❲[❳ ❲FLOAT, 2❳ ❲]❳ ❲/❳ ❲ID, i❳ ❲;❳ 
+❲}❳ 
+❲new❳ ❲ID, userInput❳ ❲=❳ ❲ID, read❳ ❲(❳ ❲)❳ ❲;❳ 
+❲new❳ ❲ID, _array❳ ❲=❳ ❲ID, digify❳ ❲(❳ ❲ID, userInput❳ ❲)❳ ❲;❳ 
+❲ID, print❳ ❲(❳ ❲ID, SDELAY_DKR_ZA_MENE_PLEASE❳ ❲(❳ ❲ID, _array❳ ❲)❳ ❲,❳ ❲CHAR, '
+'❳ ❲)❳ ❲;❳ 
