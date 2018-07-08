@@ -1,66 +1,41 @@
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 3.12.0)
 
-SET(CMAKE_CXX_FLAGS "-g -std=gnu++2a  -Werror -Wno-error=variadic-macros")
-# -Wno-error=implicit-fallthrough)
-#                   -Wno-error=incompatible-pointer-types")
+set(INCLUDE_ROOT "include")
+set(BOOST_ROOT   "~/libs/boost_1_67_0")
+set(LEXERTL_ROOT "~/libs/lexertl")
+set(GTEST_ROOT   "/home/tegeran/libs/googletest")
+
+set(CMAKE_CXX_FLAGS "-g -std=gnu++2a -Werror \
+                     -Wno-error=variadic-macros \
+                     -Werror=implicit-fallthrough")
 
 file(GLOB SOURCES "src/*.cpp")
+include_directories(${INCLUDE_ROOT} ${BOOST_ROOT} ${LEXERTL_ROOT})
 
-project (lexertl_gen.out)
-include_directories(include)
-include_directories(/home/tegeran/libs/boost_1_67_0)
-include_directories(/home/tegeran/libs/lexertl)
+add_library(calamity_core ${SOURCES})
 
-add_executable(${PROJECT_NAME} main_lexertl_gen.cpp src/cui.cpp src/token.cpp)
-target_link_libraries(${PROJECT_NAME} m progbase)
+#==========================================================#
+    project (lexer.out)                                    #
+    add_executable(${PROJECT_NAME} main_lexer.cpp)         #
+    target_link_libraries(${PROJECT_NAME} m calamity_core) #
+#==========================================================#
 
-#----------------------
+#==========================================================#
+    project (parser.out)                                   #
+    add_executable(${PROJECT_NAME} main_parser.cpp)        #
+    target_link_libraries(${PROJECT_NAME} m calamity_core) #
+#==========================================================#
 
-project (calamity.out)
-include_directories(include)
-include_directories(/home/tegeran/libs/boost_1_67_0)
-include_directories(/home/tegeran/libs/lexertl)
+#===========================#
+    project(tests)          #
+    add_subdirectory(tests) #
+#===========================#
 
-add_executable(${PROJECT_NAME} main_calamity.cpp ${SOURCES} src/var_substring.cpp)
-target_link_libraries(${PROJECT_NAME} m progbase)
+#=================================#
+    project(lexertl_gen)          #
+    add_subdirectory(lexertl_gen) #
+#=================================#
 
-
-
-#project (task1.out)
-#include_directories(include)
-#file(GLOB SOURCES "src/*.cpp")
-#add_executable(${PROJECT_NAME} task1.c ${SOURCES})
-#target_link_libraries(${PROJECT_NAME} m progbase)
-
-
-
-#
-##-----------------------
-#
-#project(task1_test.out)
-#add_executable(${PROJECT_NAME} tests/task1_test.c ${SOURCES})
-#target_link_libraries(${PROJECT_NAME} progbase check subunit m rt pthread)
-#
-##------------------------
-#project (task2.out)
-#include_directories(include)
-#file(GLOB SOURCES "src/*.cpp")
-#add_executable(${PROJECT_NAME} task2.c ${SOURCES})
-#target_link_libraries(${PROJECT_NAME} m progbase)
-
-
-
-#------------------
-
-#
-#project(task2_test.out)
-#add_executable(${PROJECT_NAME} tests/task2_test.c ${SOURCES})
-#target_link_libraries(${PROJECT_NAME} m progbase check subunit m rt pthread)
-#
-##----------------------
-#
-#project(task3_test.out)
-#add_executable(${PROJECT_NAME} tests/task3_test.c ${SOURCES} )
-#target_link_libraries(${PROJECT_NAME} m progbase check subunit m rt pthread)
-#
-##----------------------
+#project(lexer_test.out)
+#add_executable(${PROJECT_NAME} tests/lexer_test.cpp ${SOURCES} )
+#target_link_libraries(${PROJECT_NAME} m check subunit m rt pthread)

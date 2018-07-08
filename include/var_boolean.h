@@ -12,7 +12,8 @@ namespace Calamity {
 	public:
 		DECL_DEFAULT_COPY_AND_MOVE(Boolean)
 
-		Boolean(const bool &b = false);
+		Boolean() = default;
+		Boolean(const bool &b);
 
 		explicit operator bool() const;
 		bool value() const;
@@ -23,9 +24,11 @@ namespace Calamity {
 		void print(std::wostream &stream = std::wcout) { stream << *this; }
 
 		const String & toString() const;
+        const cachar_t * toCaString() const;
 		const char *toCString() const;
 		const wchar_t *toWCString() const;
 		const char16_t *toU16CString() const;
+
 
 		bool operator==(const Boolean &other) const;
 		bool operator!=(const Boolean &other) const;

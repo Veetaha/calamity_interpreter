@@ -188,8 +188,8 @@ namespace Calamity {
 
 
 
-	MessageException List::indexOutOfBoundsException(const Double & index) const {
-        Debug_noimpl();
+	Exception List::indexOutOfBoundsException(const Double & index) const {
+        CaDebug_noimpl();
 //		String errorString("list index is out of bounds [list.size=");
 //		errorString << m_vector.size();
 //		errorString += ",index=";
@@ -198,24 +198,24 @@ namespace Calamity {
 //		return MessageException(std::move(errorString.string()));
 	}
 
-	MessageException List::nonNumericListSubscriptException(const Var &subscript) const {
-        Debug_noimpl();
+	Exception List::nonNumericListSubscriptException(const Var &subscript) const {
+        CaDebug_noimpl();
 //		String errorString("list index subscript is of non-number type [subscript.typename=");
 //		errorString += subscript.typeName();
 //		errorString += ']';
 //		return MessageException(std::move(errorString.string()));
 	}
 
-	MessageException List::negativeIndexException(const Double &index) const {
-        Debug_noimpl();
+	Exception List::negativeIndexException(const Double &index) const {
+        CaDebug_noimpl();
 //		String errorString("list index subscript is negative [subscript=");
 //		errorString << index.to_int64();
 //		errorString += ']';
 //		return MessageException(std::move(errorString.string()));
 	}
 
-	MessageException List::sublistInvalidRangeTypeException(const Var &begin, const Var &end) {
-	    Debug_noimpl();
+	Exception List::sublistInvalidRangeTypeException(const Var &begin, const Var &end) {
+	    CaDebug_noimpl();
 //		String errorString("sublist range non-number argument type [begin.typename=");
 //		errorString += begin.typeName();
 //		errorString += ", end.typename=";
@@ -224,13 +224,13 @@ namespace Calamity {
 //		return MessageException(std::move(errorString.string()));
 	}
 
-	MessageException List::sublistRidiculousRangeExcetion(const Var &begin, const Var &end) {
-		std::string errorString("sublist range is ridiculous [begin=");
+	Exception List::sublistRidiculousRangeExcetion(const Var &begin, const Var &end) {
+		String errorString(ca("sublist range is ridiculous [begin="));
 		errorString += begin.typeName();
 		errorString += ", end=";
 		errorString += end.typeName();
 		errorString += ']';
-		return MessageException(std::move(errorString));
+		return Exception(std::move(errorString));
 	}
 
 	List List::sublist(const Var &begin, const Var &end) &{

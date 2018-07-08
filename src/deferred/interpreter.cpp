@@ -8,7 +8,7 @@
 #include "interpreter_def.h"
 #include "var.h"
 #include "lexer.h"
-#include "parser.h"
+#include "deferred/main_parser.h"
 #include "cui.h"
 #include "mem.h"
 

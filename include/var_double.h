@@ -14,7 +14,8 @@ namespace Calamity {
 	public:
 		DECL_DEFAULT_COPY_AND_MOVE(Double);
 
-		Double(const double &d = 0) : m_double(d) {}
+		Double() = default;
+		Double(const double &d) : m_double(d) {}
 
 		static const Double & nan();
 		static const Double & infinity();

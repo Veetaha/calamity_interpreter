@@ -53,12 +53,27 @@ namespace Calamity {
             Decrement,
             And,
             Assign,
+            PlusAssign,
+            MinusAssign,
+            MultiplyAssign,
+            DivideAssign,
+			RemainderAssign,
+            PowerAssign,
+            BitAndAssign,
+            BitOrAssign,
+            BitXorAssign,
+            BitLShiftAssign,
+            Bit3RShiftAssign,
+            Bit2RShiftAssign,
             RightCurly,
             LeftCurly,
             BitAnd,
             BitOr,
             BitNot,
             BitXor,
+			BitLeftShift,
+            Bit3RightShift,
+            Bit2RightShift,
             Coma,
             Division,
             Equality,
@@ -88,7 +103,7 @@ namespace Calamity {
             Number,
             Newline,
             MLComment,
-            SLComment  = lexertl::rules::npos(),
+            SLComment  = lexertl::rules::skip(),
             Whitespace = lexertl::rules::skip(),
             M_FirstKetword = static_cast<int>(Type::Enum),
             M_LastKeyword  = static_cast<int>(Type::Endl),
@@ -101,8 +116,8 @@ namespace Calamity {
 	public:
 	    Token(
             const Type & type,
-            String::const_iterator && begin,
-            String::const_iterator && end
+            const String::const_iterator & begin,
+            const String::const_iterator & end
         );
 	    Token(const Type & type, Substring && substr);
 
@@ -120,42 +135,31 @@ namespace Calamity {
         inline void setType(const Type & type) { m_type = type;                }
 
 
-        const char16_t * u16typeName() const;
-        static const char16_t * u16typeName(const Type & type);
+        const cachar_t * typeName() const;
+        static const cachar_t * typeName(const Type & type);
 
         bool operator==(const Token & other) const;
 
         friend String & operator+=(String & string, const Token & self);
         friend String & operator+=(String & string, const Token & type);
 
-        friend std::wostream & operator<<(std::wostream & stream, const Token & self);
+        friend ostream & operator<<(ostream & stream, const Token & self);
 
         struct TokenType_Name_Regex {
             Token::Type type;
-            const char16_t * const name;
-            const char16_t * const regex;
+            const cachar_t * const name;
+            const cachar_t * const regex;
             TokenType_Name_Regex(
                     const Token::Type & type,
-                    const char16_t * const & name,
-                    const char16_t * const & regex
+                    const cachar_t * const & name,
+                    const cachar_t * const & regex
             ) : type(type), name(name), regex(regex) {}
         };
+        static lexertl::basic_rules<cachar_t, cachar_t> makeLexertlRules();
 
-        static lexertl::u16rules makeLexertlRules();
 
-
-        inline bool isSemicolon() const { return m_type == Type::Semicolon; }
-
+        inline bool hasType(const Type & type) const { return m_type == type; }
     };
-
-
-
-
-
-#define TOKEN_VOLATILE_TYPES 4
-#define TOKEN_TOTAL_TOKEN_TYPES (sizeof(LEXEME_NAMES) / sizeof(LEXEME_NAMES[0]))
-#define TOKEN_TOTAL_KEYWORDS (((TOKEN_TOTAL_TOKEN_TYPES) - TOKEN_VOLATILE_TYPES))
-// Global spreadsheet of kewords
 
 
 }

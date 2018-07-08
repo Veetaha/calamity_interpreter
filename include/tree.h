@@ -4,7 +4,7 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
-
+#include "defs.h"
 template <typename T>
 class Tree {
 	T m_val;
@@ -84,13 +84,13 @@ bool Tree<T>::isLeaf() const {
 
 template<typename T>
 void Tree<T>::removeChild(const size_t &index) {
-	Debug_suppose(index < m_children.size());
+	CaDebug_suppose(index < m_children.size());
 	m_children.erase(m_children.begin() + index);
 }
 
 template<typename T>
 void Tree<T>::insertChild(const int &index, Tree<T> &&child) {
-	Debug_suppose(index < m_children.size());
+	CaDebug_suppose(index < m_children.size());
 	m_children.emplace(m_children.begin() + index, std::move(child));
 }
 

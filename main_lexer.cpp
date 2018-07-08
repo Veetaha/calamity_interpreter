@@ -7,25 +7,31 @@
 #include "lexer.h"
 #include "var_substring.h"
 
+#include "var_list.h"
 int main () {
-    using namespace Calamity;
+    using Calamity::conout;
+    using Calamity::endline;
+    using Calamity::String;
+    using Calamity::Lexer;
+    using Calamity::Exception;
     std::locale::global(std::locale(""));
-
     String code;
     try {
         code = String::readFromFile("../main.js");
-    } catch (const MessageException & exception){
-        std::wcout << "SIGSEGV: " << exception.what();
+    } catch (const Exception & exception){
+        conout << ca("SIGSEGV: ") << exception.what();
         return EXIT_FAILURE;
     }
     Lexer lexer;
     String errorStr(lexer.splitTokens(&code));
-    std::wcout << Cui::reverse
+    conout << Cui::reverse
                << Cui::bold
-               << L"Lexical analysis finished with code:"
+               << ca("Lexical analysis finished with code:")
                << Cui::reset
-               << L'\n'
-               << errorStr;
-
+               << endline
+               << errorStr
+               << endline
+               << ca("Parsed tokens:\n")
+               << lexer;
     return EXIT_SUCCESS;
 }

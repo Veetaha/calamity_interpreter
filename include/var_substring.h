@@ -9,6 +9,7 @@
 #include <boost/range.hpp>
 #include <boost/lexical_cast.hpp>
 #include "var_string.h"
+#include "defs.h"
 
 namespace Calamity {
     template<typename TChar>
@@ -21,12 +22,14 @@ namespace Calamity {
         const_iterator m_begin;
         const_iterator m_end;
     public:
-        BasicSubstring(const_iterator && begin, const_iterator && end)
-            : m_begin(std::move(begin)), m_end(std::move(end)) {}
+        // according to Clang tidy, const_iterator is a trivially copyable type
+        BasicSubstring(const const_iterator & begin, const const_iterator & end)
+            : m_begin(begin), m_end(end) {}
 
         inline const const_iterator begin() const { return m_begin; }
         inline const const_iterator end()   const { return m_end;   }
-        inline auto size() const          { return m_end - m_begin; }
+        inline size_type size() const
+        { return static_cast<size_type>(m_end - m_begin); }
 
         inline auto amountOf(const TChar & character) const{
             return std::count(m_begin, m_end, character);
@@ -46,8 +49,19 @@ namespace Calamity {
         inline bool operator!=(const BasicSubstring & other) const
         { return !(*this == other); }
 
+        friend inline std::basic_ostream<TChar> & operator<<(
+               std::basic_ostream<TChar> & stream,
+               const BasicSubstring & self ){
+            for (const auto & character : self) stream << character;
+            return stream;
+        }
 
-
+        friend inline auto & operator+=(BasicString<TChar> & string,
+                                        const BasicSubstring<TChar> & substring){
+            string.reserveMore(substring.size());
+            string.append(&(*substring.m_begin), substring.size());
+            return string;
+        }
     };
 
     template <typename TChar>
@@ -56,11 +70,7 @@ namespace Calamity {
         const typename BasicString<TChar>::const_iterator & end
     ) { return BasicSubstring<TChar>(begin, end); }
 
-    typedef BasicSubstring<char16_t > Substring;
-
-    std::wostream & operator<<(std::wostream & stream, const Substring & self);
-
-
+    typedef BasicSubstring<cachar_t> Substring;
 }
 
 

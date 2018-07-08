@@ -7,6 +7,7 @@
 #include "var_string.h"
 #include "var_object.h"
 #include "var_function.h"
+#include "native_exception.h"
 
 
 namespace Calamity {
@@ -27,8 +28,8 @@ namespace Calamity {
         };
 
     private:
-        Type m_type;
         void * m_value;
+        Type m_type;
     public:
         Var(const Type & type = Type::Undefined);
 
@@ -183,8 +184,8 @@ namespace Calamity {
 
         Var operator[](Var & other);
 
-        const char * typeName() const;
-        static const char * typeName(const Type & type);
+        const cachar_t * typeName() const;
+        static const cachar_t * typeName(const Type & type);
 
         static const String & typeString(const Type & type);
         const String & typeString() const;
@@ -225,7 +226,7 @@ namespace Calamity {
 
         void setNewValue();
 
-        MessageException invalidBinaryOperand(const char * const & oper, Var & operand);
+        Exception invalidBinaryOperand(const char * const & oper, Var & operand);
 
         void setLvalue(bool boolean);
 

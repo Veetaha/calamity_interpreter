@@ -6,83 +6,98 @@
 namespace Calamity {
 
     static const Token::TokenType_Name_Regex grammarInfo[]{
-        { Token::Type::Eoi            , u"Eoi"      , u"<no_regex_eoi>"        },
-        { Token::Type::Enum           , u"enum"     , uR"(enum)"               },
-        { Token::Type::Void           , u"void"     , uR"(void)"               },
-        { Token::Type::Try            , u"try"      , uR"(try)"                },
-        { Token::Type::Catch          , u"catch"    , uR"(catch)"              },
-        { Token::Type::Switch         , u"switch"   , uR"(switch)"             },
-        { Token::Type::Case           , u"case"     , uR"(case)"               },
-        { Token::Type::This           , u"this"     , uR"(this)"               },
-        { Token::Type::Break          , u"break"    , uR"(break)"              },
-        { Token::Type::Continue       , u"continue" , uR"(continue)"           },
-        { Token::Type::Do             , u"do"       , uR"(do)"                 },
-        { Token::Type::In             , u"in"       , uR"(in)"                 },
-        { Token::Type::Default        , u"default"  , uR"(default)"            },
-        { Token::Type::Delete         , u"delete"   , uR"(delete)"             },
-        { Token::Type::Throw          , u"throw"    , uR"(throw)"              },
-        { Token::Type::Import         , u"import"   , uR"(import)"             },
-        { Token::Type::Finally        , u"finally"  , uR"(finally)"            },
-        { Token::Type::Typeof         , u"typeof"   , uR"(typeof)"             },
-        { Token::Type::Yield          , u"yield"    , uR"(yield)"              },
-        { Token::Type::Var            , u"var"      , uR"(var)"                },
-        { Token::Type::Let            , u"let"      , uR"(let)"                },
-        { Token::Type::Const          , u"const"    , uR"(const)"              },
-        { Token::Type::New            , u"new"      , uR"(new)"                },
-        { Token::Type::False          , u"false"    , uR"(false)"              },
-        { Token::Type::For            , u"for"      , uR"(for)"                },
-        { Token::Type::Function       , u"function" , uR"(function)"           },
-        { Token::Type::If             , u"if"       , uR"(if)"                 },
-        { Token::Type::Else           , u"else"     , uR"(else)"               },
-        { Token::Type::True           , u"true"     , uR"(true)"               },
-        { Token::Type::Undefined      , u"undefined", uR"(undefined)"          },
-        { Token::Type::Null           , u"null"     , uR"(null)"               },
-        { Token::Type::While          , u"while"    , uR"(while)"              },
-        { Token::Type::Return         , u"return"   , uR"(return)"             },
-        { Token::Type::Endl           , u"endl"     , uR"(endl)"               },
-        { Token::Type::Identity       , u"==="      , uR"(===)"                },
-        { Token::Type::NotIdentity    , u"!=="      , uR"(!==)"                },
-        { Token::Type::Increment      , u"++"       , uR"(\+\+)"               },
-        { Token::Type::Decrement      , u"--"       , uR"(\-\-)"               },
-        { Token::Type::And            , u"&&"       , uR"(&&)"                 },
-        { Token::Type::Assign         , u"="        , uR"(=)"                  },
-        { Token::Type::RightCurly     , u"}"        , uR"(\})"                 },
-        { Token::Type::LeftCurly      , u"{"        , uR"(\{)"                 },
-        { Token::Type::BitAnd         , u"&"        , uR"(&)"                  },
-        { Token::Type::BitOr          , u"|"        , uR"(\|)"                 },
-        { Token::Type::BitNot         , u"~"        , uR"(~)"                  },
-        { Token::Type::BitXor         , u"^"        , uR"(\^)"                 },
-        { Token::Type::Coma           , u","        , uR"(,)"                  },
-        { Token::Type::Division       , u"/"        , uR"(\/)"                 },
-        { Token::Type::Equality       , u"=="       , uR"(==)"                 },
-        { Token::Type::GreaterOrEqual , u">="       , uR"(>=)"                 },
-        { Token::Type::GreaterThan    , u">"        , uR"(>)"                  },
-        { Token::Type::LeftBracket    , u"["        , uR"(\[)"                 },
-        { Token::Type::LeftPar        , u"("        , uR"(\()"                 },
-        { Token::Type::LessOrEqual    , u"<="       , uR"(<=)"                 },
-        { Token::Type::LessThan       , u"<"        , uR"(<)"                  },
-        { Token::Type::Minus          , u"-"        , uR"(\-)"                 },
-        { Token::Type::Multiplication , u"*"        , uR"(\*)"                 },
-        { Token::Type::Neq            , u"!="       , uR"(!=)"                 },
-        { Token::Type::Not            , u"!"        , uR"(!)"                  },
-        { Token::Type::Or             , u"||"       , uR"(\|\|)"               },
-        { Token::Type::Plus           , u"+"        , uR"(\+)"                 },
-        { Token::Type::Power          , u"**"       , uR"(\*\*)"               },
-        { Token::Type::Ellipsis       , u"..."      , uR"(\.\.\.)"             },
-        { Token::Type::Remainder      , u"%"        , uR"(%)"                  },
-        { Token::Type::RightBracket   , u"]"        , uR"(\])"                 },
-        { Token::Type::RightPar       , u")"        , uR"(\))"                 },
-        { Token::Type::Colon          , u":"        , uR"(:)"                  },
-        { Token::Type::Semicolon      , u";"        , uR"(;)"                  },
-        { Token::Type::Arrow          , u"=>"       , uR"(=>)"                 },
-        { Token::Type::Dot            , u"."        , uR"(\.)"                 },
-        { Token::Type::Identifier     , u"ID"       , uR"([a-zA-Z_$](\w|\$)*)" },
-        { Token::Type::String         , u"STR"      , uR"((\".*?\")|('.*?'))"  },
-        { Token::Type::Number         , u"NUMBER"   , uR"(\d+(\.?\d*))"        },
-        { Token::Type::Newline        , u"\\n"      , uR"(\n)"                 },
-        { Token::Type::MLComment      , u"<ml_comm>", uR"(\/\*.*?\*\/)"        },
-        { Token::Type::SLComment      , u"<sl_comm>", uR"(\/\/.*?($|\n))"      },
-        { Token::Type::Whitespace     , u"<whitesp>", uR"((\s{-}\n)+)"         }
+        { Token::Type::Eoi             , ca("Eoi"      ), ca("<no_regex_eoi>"        )},
+        { Token::Type::Enum            , ca("enum"     ), ca(R"(enum)"               )},
+        { Token::Type::Void            , ca("void"     ), ca(R"(void)"               )},
+        { Token::Type::Try             , ca("try"      ), ca(R"(try)"                )},
+        { Token::Type::Catch           , ca("catch"    ), ca(R"(catch)"              )},
+        { Token::Type::Switch          , ca("switch"   ), ca(R"(switch)"             )},
+        { Token::Type::Case            , ca("case"     ), ca(R"(case)"               )},
+        { Token::Type::This            , ca("this"     ), ca(R"(this)"               )},
+        { Token::Type::Break           , ca("break"    ), ca(R"(break)"              )},
+        { Token::Type::Continue        , ca("continue" ), ca(R"(continue)"           )},
+        { Token::Type::Do              , ca("do"       ), ca(R"(do)"                 )},
+        { Token::Type::In              , ca("in"       ), ca(R"(in)"                 )},
+        { Token::Type::Default         , ca("default"  ), ca(R"(default)"            )},
+        { Token::Type::Delete          , ca("delete"   ), ca(R"(delete)"             )},
+        { Token::Type::Throw           , ca("throw"    ), ca(R"(throw)"              )},
+        { Token::Type::Import          , ca("import"   ), ca(R"(import)"             )},
+        { Token::Type::Finally         , ca("finally"  ), ca(R"(finally)"            )},
+        { Token::Type::Typeof          , ca("typeof"   ), ca(R"(typeof)"             )},
+        { Token::Type::Yield           , ca("yield"    ), ca(R"(yield)"              )},
+        { Token::Type::Var             , ca("var"      ), ca(R"(var)"                )},
+        { Token::Type::Let             , ca("let"      ), ca(R"(let)"                )},
+        { Token::Type::Const           , ca("const"    ), ca(R"(const)"              )},
+        { Token::Type::New             , ca("new"      ), ca(R"(new)"                )},
+        { Token::Type::False           , ca("false"    ), ca(R"(false)"              )},
+        { Token::Type::For             , ca("for"      ), ca(R"(for)"                )},
+        { Token::Type::Function        , ca("function" ), ca(R"(function)"           )},
+        { Token::Type::If              , ca("if"       ), ca(R"(if)"                 )},
+        { Token::Type::Else            , ca("else"     ), ca(R"(else)"               )},
+        { Token::Type::True            , ca("true"     ), ca(R"(true)"               )},
+        { Token::Type::Undefined       , ca("undefined"), ca(R"(undefined)"          )},
+        { Token::Type::Null            , ca("null"     ), ca(R"(null)"               )},
+        { Token::Type::While           , ca("while"    ), ca(R"(while)"              )},
+        { Token::Type::Return          , ca("return"   ), ca(R"(return)"             )},
+        { Token::Type::Endl            , ca("endl"     ), ca(R"(endl)"               )},
+        { Token::Type::Identity        , ca("==="      ), ca(R"(===)"                )},
+        { Token::Type::NotIdentity     , ca("!=="      ), ca(R"(!==)"                )},
+        { Token::Type::Increment       , ca("++"       ), ca(R"(\+\+)"               )},
+        { Token::Type::Decrement       , ca("--"       ), ca(R"(\-\-)"               )},
+        { Token::Type::And             , ca("&&"       ), ca(R"(&&)"                 )},
+        { Token::Type::Assign          , ca("="        ), ca(R"(=)"                  )},
+        { Token::Type::PlusAssign      , ca("+="       ), ca(R"(\+=)"                )},
+        { Token::Type::MinusAssign     , ca("-="       ), ca(R"(\-=)"                )},
+        { Token::Type::MultiplyAssign  , ca("*="       ), ca(R"(\*=)"                )},
+        { Token::Type::DivideAssign    , ca("/="       ), ca(R"(\/=)"                )},
+        { Token::Type::RemainderAssign , ca("%="       ), ca(R"(%=)"                 )},
+        { Token::Type::PowerAssign     , ca("**="      ), ca(R"(\*\*=)"              )},
+        { Token::Type::BitAndAssign    , ca("&="       ), ca(R"(&=)"                 )},
+        { Token::Type::BitOrAssign     , ca("|="       ), ca(R"(\|=)"                )},
+        { Token::Type::BitXorAssign    , ca("^="       ), ca(R"(\^=)"                )},
+        { Token::Type::BitLShiftAssign , ca("<<="      ), ca(R"(<<=)"                )},
+        { Token::Type::Bit3RShiftAssign, ca(">>>="     ), ca(R"(>>>=)"               )},
+        { Token::Type::Bit2RShiftAssign, ca(">>="      ), ca(R"(>>=)"                )},
+        { Token::Type::RightCurly      , ca("}"        ), ca(R"(\})"                 )},
+        { Token::Type::LeftCurly       , ca("{"        ), ca(R"(\{)"                 )},
+        { Token::Type::BitAnd          , ca("&"        ), ca(R"(&)"                  )},
+        { Token::Type::BitOr           , ca("|"        ), ca(R"(\|)"                 )},
+        { Token::Type::BitNot          , ca("~"        ), ca(R"(~)"                  )},
+        { Token::Type::BitXor          , ca("^"        ), ca(R"(\^)"                 )},
+        { Token::Type::BitLeftShift    , ca("<<"       ), ca(R"(<<)"                 )},
+        { Token::Type::Bit3RightShift  , ca(">>"       ), ca(R"(>>)"                 )},
+        { Token::Type::Bit2RightShift  , ca(">>>"      ), ca(R"(>>>)"                )},
+        { Token::Type::Coma            , ca(","        ), ca(R"(,)"                  )},
+        { Token::Type::Division        , ca("/"        ), ca(R"(\/)"                 )},
+        { Token::Type::Equality        , ca("=="       ), ca(R"(==)"                 )},
+        { Token::Type::GreaterOrEqual  , ca(">="       ), ca(R"(>=)"                 )},
+        { Token::Type::GreaterThan     , ca(">"        ), ca(R"(>)"                  )},
+        { Token::Type::LeftBracket     , ca("["        ), ca(R"(\[)"                 )},
+        { Token::Type::LeftPar         , ca("("        ), ca(R"(\()"                 )},
+        { Token::Type::LessOrEqual     , ca("<="       ), ca(R"(<=)"                 )},
+        { Token::Type::LessThan        , ca("<"        ), ca(R"(<)"                  )},
+        { Token::Type::Minus           , ca("-"        ), ca(R"(\-)"                 )},
+        { Token::Type::Multiplication  , ca("*"        ), ca(R"(\*)"                 )},
+        { Token::Type::Neq             , ca("!="       ), ca(R"(!=)"                 )},
+        { Token::Type::Not             , ca("!"        ), ca(R"(!)"                  )},
+        { Token::Type::Or              , ca("||"       ), ca(R"(\|\|)"               )},
+        { Token::Type::Plus            , ca("+"        ), ca(R"(\+)"                 )},
+        { Token::Type::Power           , ca("**"       ), ca(R"(\*\*)"               )},
+        { Token::Type::Ellipsis        , ca("..."      ), ca(R"(\.\.\.)"             )},
+        { Token::Type::Remainder       , ca("%"        ), ca(R"(%)"                  )},
+        { Token::Type::RightBracket    , ca("]"        ), ca(R"(\])"                 )},
+        { Token::Type::RightPar        , ca(")"        ), ca(R"(\))"                 )},
+        { Token::Type::Colon           , ca(":"        ), ca(R"(:)"                  )},
+        { Token::Type::Semicolon       , ca(";"        ), ca(R"(;)"                  )},
+        { Token::Type::Arrow           , ca("=>"       ), ca(R"(=>)"                 )},
+        { Token::Type::Dot             , ca("."        ), ca(R"(\.)"                 )},
+        { Token::Type::Identifier      , ca("ID"       ), ca(R"((\w{-}\d|$)(\w|\$)*)" )},
+        { Token::Type::String          , ca("STRING"   ), ca(R"(\"(\\.|[^"\\])*\"|\'(\\.|[^'\\])*\')")},
+        { Token::Type::Number          , ca("NUMBER"   ), ca(R"(\d*(\.?\d+))"        )},
+        { Token::Type::Newline         , ca("\\n"      ), ca(R"(\n)"                 )},
+        { Token::Type::MLComment       , ca("<ml_comm>"), ca(R"(\/\*.*?\*\/)"        )},
+        { Token::Type::SLComment       , ca("<sl_comm>"), ca(R"(\/\/[^\n]*?$)"       )},
+        { Token::Type::Whitespace      , ca("<whitesp>"), ca(R"((\s{-}\n)+)"         )}
     };
 
 
@@ -96,13 +111,13 @@ namespace Calamity {
     }
 
     Token::Token(const Token::Type & type, Substring && substr)
-        : m_type(type), m_substr(std::move(substr)) {}
+        : m_type(type), m_substr(substr) {}
 
     Token::Token(
             const Token::Type & type,
-            String::const_iterator && begin,
-            String::const_iterator && end)
-            : m_type(type), m_substr(std::move(begin), std::move(end)) {}
+            const String::const_iterator & begin,
+            const String::const_iterator & end)
+            : m_type(type), m_substr(begin, end) {}
 
 
     bool Token::operator==(const Token & other) const {
@@ -112,81 +127,80 @@ namespace Calamity {
         );
     }
 
-    const char16_t * Token::u16typeName() const {
-        return u16typeName(m_type);
+    const cachar_t * Token::typeName() const {
+        return typeName(m_type);
     }
 
-    const char16_t * Token::u16typeName(const Type & type) {
+    const cachar_t * Token::typeName(const Type & type) {
         return grammarInfo[static_cast<int>(type)].name;
     }
 
-    std::wostream & operator<<(std::wostream & stream, const Token & self) {
+    ostream & operator<<(ostream & stream, const Token & self) {
         typedef Token::Type Type;
         using namespace Cui;
 
         if (self.isKeyword()) {
             return stream << fgnd(2, 2, 5)
-                          << L'{'
+                          << ca('{')
                           << bold
-                          << self.u16typeName()
+                          << self.typeName()
                           << bold_off
-                          << L'}'
+                          << ca('}')
                           << reset;
         } else if (self.isPunctuation()) {
             return stream << fgnd(5, 2, 0)
-                          << L'{'
+                          << ca('{')
                           << bold
-                          << self.u16typeName()
+                          << self.typeName()
                           << bold_off
-                          << L'}'
+                          << ca('}')
                           << reset;
         }
-        stream << L'{' << bold << self.u16typeName();
+        stream << ca('{') << bold << self.typeName();
         switch (self.type()) {
             case Type::Identifier:
-                [[fallthrough]]
             case Type::Number:
             case Type::String:{
-                stream << L", " << self.m_substr << bold_off;
+                stream << ca(", ") << self.m_substr << bold_off;
                 break;
             }
             default: {
 
             }
         }
-        return stream << L'}';
+        return stream << ca('}');
     }
 
     String & operator+=(String & string, const Token & self) {
         typedef Token::Type Type;
-        string += u"{";
-        string += self.u16typeName();
+        string += ca("{");
+        string += self.typeName();
         switch (self.type()) {
             case Type::Number:
             case Type::Identifier: {
-                (string += u", ") += self.m_substr;
+                (string += ca(", ")) += self.m_substr;
                 break;
             }
             case Type::String: {
-                ((string += u", \"") += self.m_substr) += u"\"";
+                string.push_back(ca(", \""), self.m_substr, ca("\""));
                 break;
             }
             default: break;
         }
-        return string += u'}';
+        return string += ca('}');
     }
 
-    lexertl::u16rules Token::makeLexertlRules() {
-        lexertl::u16rules rules(0); // zero in order to omit default dot_not_newline option
+    lexertl::basic_rules<cachar_t, cachar_t> Token::makeLexertlRules() {
+        using LtlRules = lexertl::basic_rules<cachar_t, cachar_t>;
+        LtlRules rules;
         for (auto * iterator(grammarInfo + 1);
                     iterator != std::end(grammarInfo);
-                    ++iterator){
+                  ++iterator){
             rules.push(
                 iterator->regex,
-                static_cast<lexertl::u16rules::id_type>(iterator->type)
+                static_cast<LtlRules::id_type>(iterator->type)
             );
         }
         return rules;
     }
-
 }

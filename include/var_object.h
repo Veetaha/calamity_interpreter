@@ -6,7 +6,7 @@
 #define TASK3_TEST_OUT_VAR_OBJECT_H
 
 #include "var_string.h"
-#include <map>
+//#include <map>
 
 
 namespace Calamity {
@@ -15,7 +15,7 @@ namespace Calamity {
 
 	class Object {
 		String m_classname;
-		std::map<Var, Var> m_fields;
+//		std::map<Var, Var> m_fields;
 		Object * m_prototype;
 
 

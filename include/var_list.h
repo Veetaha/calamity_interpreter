@@ -98,94 +98,12 @@ namespace Calamity {
 	private:
 		void checkReaderIndex(const Var & index) const; // throws MessageException
 		void checkInserterIndex(const Var & index) const; // throws MessageException
-		MessageException negativeIndexException(const Double & index) const;
-		MessageException indexOutOfBoundsException(const Double & index) const;
-		MessageException nonNumericListSubscriptException(const Var &subscript) const;
-		MessageException sublistInvalidRangeTypeException(const Var &begin, const Var &end);
-		MessageException sublistRidiculousRangeExcetion(const Var &begin, const Var &end);
+		Exception negativeIndexException(const Double & index) const;
+		Exception indexOutOfBoundsException(const Double & index) const;
+		Exception nonNumericListSubscriptException(const Var &subscript) const;
+		Exception sublistInvalidRangeTypeException(const Var &begin, const Var &end);
+		Exception sublistRidiculousRangeExcetion(const Var &begin, const Var &end);
 	};
-
-
-
-
-
-
-
-
-
-    template<typename TChar>
-    BasicString<TChar> & operator+=(BasicString<TChar> & self, const Var & var) {
-        switch (var.type()) {
-            case Var::Type::Undefined: {
-                return self += "undefined";
-            }
-            case Var::Type::Boolean: {
-                return self += var.boolean().toCString();
-            }
-            case Var::Type::Number: {
-                return self += var.number().toString();
-            }
-            case Var::Type::String: {
-                return self += var.string();
-            }
-            case Var::Type::List: {        // average var.toString() size == 3
-                self.reserve(self.size() + 3 * var.list().size());
-                return std_ext::appendContainerToString(
-                        self,
-                        var.list(),
-                        [](BasicString<TChar> & str, const Var & variable) {
-                            str += variable;
-                        }
-                );
-            }
-            default: {
-                Debug_noimpl();
-            }
-        }
-    }
-
-    template <typename TChar>
-    BasicString<TChar> & operator>>(const Var & var, BasicString<TChar> & string) {
-        switch (var.type()) {
-            case Var::Type::Undefined: {
-                return "undefined" >> string;
-            }
-            case Var::Type::Boolean: {
-                return var.boolean().toCString() >> string;
-            }
-            case Var::Type::Number: {
-                return var.number().value() >> string;
-            }
-            case Var::Type::String: {
-                return var.string() >> string;
-            }
-            case Var::Type::List: {               // average var.toString() size == 3
-                string.reserve(string.size() + 3 * var.list().size());
-                return std_ext::prependToString(
-                        string,
-                        var.list(),
-                        [](String & str, const Var & variable) {
-                            str += variable;
-                        }
-                );
-            }
-            default: {
-                Debug_noimpl();
-            }
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 

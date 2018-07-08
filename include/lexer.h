@@ -21,7 +21,7 @@ namespace Calamity {
 
         inline const String * const & code() const { return m_code; }
 
-        friend std::wostream & operator<<(std::wostream & stream, const Lexer & self);
+        friend ostream & operator<<(ostream & stream, const Lexer & self);
 
     private:
         String unexpectedTokenException(String::const_iterator & tokenIt);

@@ -1,27 +1,35 @@
 #pragma once
 
-#define nullptr ((void *)0)
-#define sizeat(arr) ({              \
-	typedef __typeof(arr) ArrType;  \
-	sizeof(ArrType)/sizeof((arr)[0]);\
-})
-#define slitlen(literal) (sizeat(literal) - 1)
+#ifndef __cplusplus
+	#define nullptr ((void *)0)
+	#define _auto __extension__ __auto_type
+    #define typeat(ARGS...) __typeof(ARGS)
+    #define sizeat(arr) ({               \
+        typedef typeat(arr) ArrType;     \
+        sizeof(ArrType)/sizeof((arr)[0]);\
+    })
+    #define slitlen(literal) (sizeat(literal) - 1)
 
-#define imply(presupposition, conclusion) (!(presupposition) || (conclusion))
+    #define FALL_THROUGH __attribute((fallthrough));
+#else
 
-#define _auto __extension__ __auto_type
+    #define _auto auto
+    #define typeat(ARGS...) decltype(ARGS)
+    namespace Meta {
+        template<typename T, size_t N>
+        constexpr size_t sizeat(const T (& arr)[N]) noexcept {
+            return N;
+        }
+        template<typename TChar, size_t N>
+        constexpr size_t slitlen(const TChar (& literalCharacterArray)[N]) noexcept {
+            return N - 1;
+        }
+
+    }
+    #define FALL_THROUGH [[fallthrough]]
+#endif
 
 #define AUTO_DESTR(destructor) __extension__ __attribute((cleanup(destructor)))
-
-#define FALL_THROUGH __attribute((fallthrough));
-
-#define swap(var1, var2) {\
-	_auto keeper = var1;\
-	var1 = var2;\
-	var2 = keeper;\
-}
-
-
 
 #define return_autoptr(AUTOMATIC_VARIABLE) ({ \
 	_auto ___temp = (AUTOMATIC_VARIABLE);     \
@@ -29,9 +37,8 @@
 	___temp;								  \
 })
 
-#define Macro_toOneArgument_EXP(ARGS...) ARGS...
-#define Macro_toOneArgument(ARGS...) Macro_toOneArgument_EXP(ARGS...)
 
+#define Macro_invoke(ARGS...) ARGS
 
 #define Macro_argument_20(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, ...) _20
 #define Macro_argument_19(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, ...) _19
@@ -82,6 +89,9 @@ Macro_argument_20("dummy", ##ARGS, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 
 #define Macro_concatenate_EXP(LEFT, RIGHT) LEFT##RIGHT
 #define Macro_concatenate(LEFT, RIGHT) Macro_concatenate_EXP(LEFT, RIGHT)
 
+#define Macro_stringify_EXP(ARGS...) #ARGS
+#define Macro_stringify(ARGS...) Macro_stringify_EXP(ARGS)
+
 #define Macro_overload(PREFIX, ARGS...)\
 	Macro_concatenate(PREFIX##_, Macro_argumentsAmount(ARGS))(ARGS)
 
@@ -91,3 +101,4 @@ Macro_argument_20("dummy", ##ARGS, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 
 
 #define Macro_nameOverloadedByPresence(PREFIX, ARGS...)\
 	Macro_concatenate(PREFIX##_, Macro_hasArgument(ARGS))
+

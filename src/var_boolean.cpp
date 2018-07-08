@@ -47,9 +47,13 @@ namespace Calamity {
         return m_bool ? L"true" : L"false";
     }
 
+    const cachar_t * Boolean::toCaString() const{
+        return m_bool ? ca("true") : ca("false");
+    }
+
     const String & Boolean::toString() const {
-        static String trueString  = u"true";
-        static String falseString = u"false";
+        static String trueString  = ca("true");
+        static String falseString = ca("false");
         return m_bool ? trueString : falseString;
     }
 

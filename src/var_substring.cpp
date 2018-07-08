@@ -6,12 +6,7 @@
 
 namespace Calamity {
 
-    std::wostream & operator<<(std::wostream & stream, const Substring & self){
-        for(const auto & character : self){
-            stream << static_cast<wchar_t>(character);
-        }
-        return stream;
-    }
+
 
 
 

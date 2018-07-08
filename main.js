@@ -1,10 +1,4 @@
-/* 
-    multiline comments are provided by til'da
-    read README_MANUAL.txt before learning my language
-    Calamity (Program) struct is declared in interpreter_def.h
-
-*/
-
+айдентифаер
 try {
 
 } catch (exeception) {}

@@ -323,21 +323,23 @@ namespace std_ext {
     appendNumberToString(TString & string, const TNumeric & number);
 
 	template <typename TContainer, typename TString, typename TAppender>
-	decltype(auto) prependToString(TString & string, const TContainer & container, const TAppender & appender);
+	TString & prependToString(TString & string, const TContainer & container, const TAppender & appender);
 
 	template <typename TNumeric, typename TString>
-	decltype(auto) prependToString(std::enable_if_t<is_numeric_v<TNumeric>, TString &> string,
-								   const TNumeric & number);
+    auto prependToString(TString & string, const TNumeric & number)
+    -> std::enable_if_t<is_numeric_v<TNumeric>, TString &>;
+
+	template <typename TString, typename TChar>
+	TString & prependToString(TString & string, const TChar * const & cString);
 
 	template <typename TString>
-	decltype(auto) prependToString(TString & string, const char * const & cString);
+	TString & prependToString(TString & string, const TString & prependString);
 
-	template <typename TString>
-	decltype(auto) prependToString(TString & string, const TString & prependString);
+    template <typename TString, typename TChar, size_t N>
+    TString & prependToString(TString &string, const TChar(&charArr)[N]);
 
 
-
-	template<typename CharT, typename Traits>
+	template <typename CharT, typename Traits>
 	auto streamContentSize(std::basic_istream<CharT, Traits> & stream);
 
 
@@ -623,20 +625,23 @@ namespace std_ext {
             const TContainer & container,
             const PushBacker & appender
     ){
+	    typedef std::remove_reference_t<decltype(string[0])> char_type;
 		auto begin(container.begin());
 		auto end(container.end());
 		if (begin == end){
-			return string += "[]";
+            return (string += static_cast<char_type>('['))
+                           += static_cast<char_type>(']');
 		} else {
-			string += '[';
+			string += static_cast<char_type>('[');
 			appender(string, *begin);
 			++begin;
 			while (begin != end){
-				string += ", ";
+                (string += static_cast<char_type>(','))
+                        += static_cast<char_type>(' ');
 				appender(string, *begin);
 				++begin;
 			}
-			return string += ']';
+			return string += static_cast<char_type>(']');
 		}
 	};
 
@@ -647,25 +652,42 @@ namespace std_ext {
 	}
 
 	template<typename TContainer, typename TString, typename TAppender>
-	decltype(auto) prependToString(TString &string, const TContainer &container, const TAppender &appender) {
+	TString & prependToString(TString &string, const TContainer &container, const TAppender &appender) {
 		TString temporary;
-		return string.insert(0, appendContainerToString(temporary, container, appender));
+		string.insert(0, appendContainerToString(temporary, container, appender));
+		return string;
 	}
 
 	template<typename TNumeric, typename TString>
-    decltype(auto) prependToString(std::enable_if_t<is_numeric_v<TNumeric>, TString &> string,
-                                   const TNumeric & number){
-		return string.insert(0, std::to_string(number));
+    auto prependToString(TString & string, const TNumeric & number)
+    -> std::enable_if_t<is_numeric_v<TNumeric>, TString &>{
+		string.insert(0, boost::lexical_cast<TString>(number));
+		return string;
+	}
+
+    template<typename TString, typename TChar, size_t N>
+    TString & prependToString(TString &string, const TChar(&charArr)[N]) {
+        if (string.capacity() < string.size() + N){
+            string.reserve(string.size() + N);
+        }
+        string.insert(0, charArr, N);
+        return string;
+    }
+
+
+	template<typename TString, typename TChar>
+	TString & prependToString(TString &string, const TChar * const &cString) {
+		string.insert(0, cString);
+		return string;
 	}
 
 	template<typename TString>
-	decltype(auto) std_ext::prependToString(TString &string, const char * const &cString) {
-		return string.insert(0, cString);
-	}
-
-	template<typename TString>
-	decltype(auto) std_ext::prependToString(TString &string, const TString &prependString) {
-		return string.insert(0, prependString);
+	TString & prependToString(TString &string, const TString &prependString) {
+	    if (string.capacity() < string.size() + prependString.size()) {
+            string.reserve(string.size() + prependString.size());
+        }
+		string.insert(0, prependString);
+	    return string;
 	}
 
 	template<typename CharT, typename Traits>
