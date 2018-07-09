@@ -170,7 +170,7 @@ CALA_TEST(validIdentifiers){
         token(T::Number,     7, 8),
         token(T::Identifier, 8, 10)
     );
-// @todo nonlatin idetifiers support
+// @todo non-latin idetifiers support
 //    expectTokensFor("айдентифайер$ Її$Г",
 //        token(T::Identifier, 0, 13),
 //        token(T::Identifier, 14, 18)
@@ -194,7 +194,7 @@ CALA_TEST(keywords){
         suspectStr = Token::typeName(static_cast<Token::Type>(toktype));
         suspectStr += ca("_");
         ASSERT_TRUE(split(std::move(suspectStr)).empty());
-        matchTokens(token(T::Identifier, 0, suspectStr.size()));
+        matchTokens(token(T::Identifier, 0, code.size()));
     }
 }
 

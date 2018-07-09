@@ -23,6 +23,10 @@ namespace Calamity {
             return m_errorString.c_str();
         }
 
+        inline friend ostream & operator<<(ostream & stream, const Exception & self){
+            return stream << self.m_errorString;
+        }
+
     };
 
 };
