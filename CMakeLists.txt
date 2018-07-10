@@ -7,7 +7,8 @@ set(GTEST_ROOT   "${INCLUDE_ROOT}/googletest")
 
 set(CMAKE_CXX_FLAGS "-g -std=gnu++2a -Werror \
                      -Wno-error=variadic-macros \
-                     -Werror=implicit-fallthrough")
+                     -Werror=implicit-fallthrough"
+                    CACHE STRING "compiler flags")
 
 file(GLOB SOURCES "src/*.cpp")
 # global include for all projects (use target_link_libraries otherwise)
