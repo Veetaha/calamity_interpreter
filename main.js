@@ -1,4 +1,3 @@
-айдентифаер
 try {
 
 } catch (exeception) {}
