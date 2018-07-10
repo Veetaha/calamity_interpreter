@@ -7,7 +7,7 @@ os:
 #before_install:
 #- ./bootstrap.sh
 script:
-- ./bootstrap.sh ./cd scripts; ./build_all.sh; ./run_tests.sh
+- ./bootstrap.sh; ./cd scripts; ./build_all.sh; ./run_tests.sh
 env:
   global:
   - LANG="en_US.UTF-8"
