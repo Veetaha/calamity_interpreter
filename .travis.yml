@@ -23,7 +23,6 @@ matrix:
           compiler: gcc
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-6.0
           packages:
             - g++-8
           env: COMPILER=g++-8

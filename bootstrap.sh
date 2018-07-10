@@ -10,6 +10,11 @@ LEXERTL_VITAHA_REPO="https://tegeran@bitbucket.org/tegeran/ben_hansons_lexertl14
 
 GOOGLE_TEST_REPO="https://github.com/google/googletest.git"
 
+# set g++8 as default compiler
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 60 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+echo "g++ default version is now"
+g++ --version
+
 cd "$INCLUDE_ROOT"
 
 ##### install boost
