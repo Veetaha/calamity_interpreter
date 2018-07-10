@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.0)
+cmake_minimum_required(VERSION 3.9.0)
 
 set(PATH_TO_BOOST   "~/libs/boost_1_67_0")
 set(PATH_TO_LEXERTL "~/libs/lexertl")

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.0)
+cmake_minimum_required(VERSION 3.9.0)
 
 add_subdirectory(/usr/local/include/googletest ../gtets-build) #${GTEST_ROOT} ../gtets-build)
 
