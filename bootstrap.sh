@@ -14,7 +14,7 @@ cd "$INCLUDE_ROOT"
 
 ##### install boost
 sudo wget -O "$BOOST_TAG".tar.gz "$BOOST_SOURCE_DOWNLOAD_LINK"
-sudo tar xzvf "$BOOST_TAG".tar.gz
+sudo tar xzf "$BOOST_TAG".tar.gz
 # should've run "$BOOST_TAG"/bootstrap.sh, but it takes more than half
 # an hour and is not necessary as we use header only components
 

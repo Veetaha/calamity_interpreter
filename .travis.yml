@@ -1,5 +1,6 @@
 language: cpp
 sudo: required
+dist: trusty
 compiler:
 - g++
 os:
@@ -19,12 +20,11 @@ matrix:
     - os: linux
       addons:
         apt:
+          compiler: gcc
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-6.0
           packages:
             - g++-8
-      env:
-         - MATRIX_EVAL="CC=gcc-8.1 && CXX=g++-8.1"
-before_install:
-    - eval "${MATRIX_EVAL}"
+          env: COMPILER=g++-8
 
