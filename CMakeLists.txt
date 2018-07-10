@@ -19,13 +19,19 @@ include_directories(include ${BOOST_ROOT} ${LEXERTL_ROOT} ${GTEST_ROOT})
 add_library(calamity_core ${SOURCES})
 
 #==========================================================#
-    project (lexer.out)                                    #
+    project (lexer.out)
+    set(CMAKE_CXX_FLAGS "-g -std=gnu++2a -Werror \
+                     -Wno-error=variadic-macros \
+                     -Werror=implicit-fallthrough")
     add_executable(${PROJECT_NAME} main_lexer.cpp)         #
     target_link_libraries(${PROJECT_NAME} m calamity_core) #
 #==========================================================#
 
 #==========================================================#
-    project (parser.out)                                   #
+    project (parser.out)
+    set(CMAKE_CXX_FLAGS "-g -std=gnu++2a -Werror \
+                     -Wno-error=variadic-macros \
+                     -Werror=implicit-fallthrough")
     add_executable(${PROJECT_NAME} main_parser.cpp)        #
     target_link_libraries(${PROJECT_NAME} m calamity_core) #
 #==========================================================#
