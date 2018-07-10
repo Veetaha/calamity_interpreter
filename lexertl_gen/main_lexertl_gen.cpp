@@ -58,7 +58,9 @@ int main (int argc, char ** argv) {
 
     sm.minimise();
 
+#ifdef DEBUG_DUMP
     ltl_debug::dump(sm, conout);
+#endif
 
     genFile << "#include <lexertl/match_results.hpp>\n\n"
                "namespace Calamity {\n\t"

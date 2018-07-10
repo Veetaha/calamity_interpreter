@@ -9,6 +9,9 @@ set(CMAKE_CXX_FLAGS "-g -std=gnu++2a -Werror \
                      -Wno-error=variadic-macros \
                      -Werror=implicit-fallthrough")
 
+set(CMAKE_CXX20_STANDARD_COMPILE_OPTION  "-std=c++2a"  )
+set(CMAKE_CXX20_EXTENSION_COMPILE_OPTION "-std=gnu++2a")
+
 file(GLOB SOURCES "src/*.cpp")
 # global include for all projects (use target_link_libraries otherwise)
 include_directories(include ${BOOST_ROOT} ${LEXERTL_ROOT} ${GTEST_ROOT})
