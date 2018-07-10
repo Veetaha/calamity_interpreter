@@ -266,3 +266,13 @@ CALA_TEST(assignmentOperators){
         token(T::DivideAssign, 11, 13)
     );
 }
+
+CALA_TEST(keyTokensInStringLiteral){
+    expectTokensFor("\"for while ++ *=\"",
+        token(T::String, 1, 16)
+    );
+    expectTokensFor("\'/* //falseComments \'",
+        token(T::String, 1, 20)
+    );
+
+}

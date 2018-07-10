@@ -1,1 +1,30 @@
 language: cpp
+sudo: required
+compiler:
+- g++
+os:
+- linux
+before_install:
+- ./bootstrap.sh
+script:
+- cd scripts; ./build_all.sh; ./run_tests.sh
+env:
+  global:
+  - LANG="en_US.UTF-8"
+
+#######################
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8.1
+      env:
+         - MATRIX_EVAL="CC=gcc-8.1 && CXX=g++-8.1"
+before_install:
+    - eval "${MATRIX_EVAL}"
+

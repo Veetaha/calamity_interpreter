@@ -28,6 +28,16 @@ namespace Calamity {
         };
 
     private:
+        union UValue{
+            Boolean boolean;
+            Double number;
+            String * string;
+            List * list;
+            Function * function;
+            Object * object;
+        };
+
+        // UValue m_value; //use union to get better performance for primitive types
         void * m_value;
         Type m_type;
     public:

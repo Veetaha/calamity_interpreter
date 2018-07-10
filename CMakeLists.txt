@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.12.0)
 
-set(INCLUDE_ROOT "include")
-set(BOOST_ROOT   "~/libs/boost_1_67_0")
-set(LEXERTL_ROOT "~/libs/lexertl")
-set(GTEST_ROOT   "/home/tegeran/libs/googletest")
+set(INCLUDE_ROOT "/usr/local/include")
+set(BOOST_ROOT   "${INCLUDE_ROOT}/boost_1_67_0")
+set(LEXERTL_ROOT "${INCLUDE_ROOT}/lexertl")
+set(GTEST_ROOT   "${INCLUDE_ROOT}/googletest")
 
 set(CMAKE_CXX_FLAGS "-g -std=gnu++2a -Werror \
                      -Wno-error=variadic-macros \
                      -Werror=implicit-fallthrough")
 
 file(GLOB SOURCES "src/*.cpp")
-include_directories(${INCLUDE_ROOT} ${BOOST_ROOT} ${LEXERTL_ROOT})
+# global include for all projects (use target_link_libraries otherwise)
+include_directories(include ${BOOST_ROOT} ${LEXERTL_ROOT} ${GTEST_ROOT})
 
 add_library(calamity_core ${SOURCES})
 
@@ -36,6 +37,5 @@ add_library(calamity_core ${SOURCES})
     add_subdirectory(lexertl_gen) #
 #=================================#
 
-#project(lexer_test.out)
-#add_executable(${PROJECT_NAME} tests/lexer_test.cpp ${SOURCES} )
+# Pure C test framwork linkings:
 #target_link_libraries(${PROJECT_NAME} m check subunit m rt pthread)
