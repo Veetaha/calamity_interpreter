@@ -8,7 +8,7 @@
 #include "interpreter_def.h"
 #include "var.h"
 #include "lexer.h"
-#include "deferred/main_parser.h"
+#include "main_parser.h"
 #include "cui.h"
 #include "mem.h"
 
@@ -682,7 +682,7 @@ Var * Calamity_execute(const String * code){
     if (Lexer_splitTokens(String_readOnly(code), tokens) != LEXER_SUCCESS){
         List_free(tokens);
         Var * err = Var_new(Type_STRING);
-        String_append(Var_stringAt(err), "Lexer error");
+        String_append(Var_stringAt(err), "LexicalInfo error");
         return err;
     }
     Tree * ast = Parser_buildNewAstTree(tokens, code);

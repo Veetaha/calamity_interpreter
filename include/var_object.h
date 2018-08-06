@@ -9,7 +9,7 @@
 //#include <map>
 
 
-namespace Calamity {
+namespace Cala {
 
     class Var;
 

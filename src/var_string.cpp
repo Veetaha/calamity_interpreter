@@ -1,54 +1,58 @@
-//
-// Created by tegeran on 08.07.18.
-//
-
 #include "native_exception.h"
 #include "var_string.h"
+#include "var_undefined.h"
+#include "var_null.h"
 #include "var.h"
 #include "var_list.h"
 
-namespace Calamity {
-    template<>
-    BasicString<cachar_t>
-    BasicString<cachar_t>::readFromFile(const char * const & path) {
-        std::basic_ifstream<cachar_t> file(path);
-        if (! file.is_open()) {
-            String errorString(ca("failed to open file \""));
-            (errorString += path) += ca("\"");
+namespace Cala {
+    
+    String String::readFromFile(const char * const & path) {
+        ifstream file(path);
+        if (!file.is_open()) {
+            String errorString;
+            errorString += ca("failed to open file \"");
+            errorString += path;
+            errorString += ca('\"');
             throw Exception(std::move(errorString));
         } else {
-            std::basic_ostringstream<cachar_t> contentHolder;
+            ostringstream contentHolder;
             contentHolder << file.rdbuf();
             return contentHolder.str();
         }
     }
 
-    String & operator+=(String & self, const char * cString) {
-        self.reserveMore(std::char_traits<char>::length(cString));
-        while (*cString){
-            self += static_cast<cachar_t>(*cString++);
+    String & String::operator+=(const char * cString) {
+        reserveMore(Vtem::cstrlen(cString));
+        while (*cString) {
+            *this += static_cast<cachar_t>(*cString++);
         }
-        return self;
+        return *this;
     }
 
-    String & operator+=(String & self, const Var & var) {
+    String & String::operator+=(const Var & var) {
+        typedef Var::Type Type;
+
         switch (var.type()) {
-            case Var::Type::Undefined: {
-                return self += ca("undefined");
+            case Type::Null: {
+                return *this += Cala::cast<String>(null);
             }
-            case Var::Type::Boolean: {
-                return self += var.boolean().toCaString();
+            case Type::Undefined: {
+                return *this += Cala::cast<String>(undefined);
             }
-            case Var::Type::Number: {
-                return self += var.number().toString();
+            case Type::Boolean: {
+                return *this += Cala::cast<String>(var.boolean());
             }
-            case Var::Type::String: {
-                return self += var.string();
+            case Type::Number: {
+                return *this << *var.number();
             }
-            case Var::Type::List: {        // average var.toString() size == 3
-                self.reserve(self.size() + 3 * var.list().size());
-                return std_ext::appendContainerToString(
-                    self,
+            case Type::String: {
+                return *this += var.string();
+            }
+            case Type::List: {        // average var.toString() size == 3
+                reserveMore(3 * var.list().size());
+                return Vtem::appendContainerToString(
+                    *this,
                     var.list(),
                     [](String & str, const Var & variable) {
                         str += variable;
@@ -56,27 +60,32 @@ namespace Calamity {
                 );
             }
             default: {
-                CaDebug_noimpl();
+                Debug_noimpl();
             }
         }
     }
+
     String & operator>>(const Var & var, String & string) {
+        typedef Var::Type Type;
         switch (var.type()) {
-            case Var::Type::Undefined: {
-                return ca("undefined") >> string;
+            case Type::Null: {
+                return cast<String>(null) >> string;
             }
-            case Var::Type::Boolean: {
-                return var.boolean().toCaString() >> string;
+            case Type::Undefined: {
+                return cast<String>(undefined) >> string;
             }
-            case Var::Type::Number: {
+            case Type::Boolean: {
+                return cast<String>(var.boolean()) >> string;
+            }
+            case Type::Number: {
                 return var.number().value() >> string;
             }
-            case Var::Type::String: {
+            case Type::String: {
                 return var.string() >> string;
             }
-            case Var::Type::List: {               // average var.toString() size == 3
-                string.reserve(string.size() + 3 * var.list().size());
-                return std_ext::prependToString(
+            case Type::List: {               // average var.toString() size == 3
+                string.reserveMore(3 * var.list().size());
+                return Vtem::prependToString(
                     string,
                     var.list(),
                     [](String & str, const Var & variable) {
@@ -85,10 +94,53 @@ namespace Calamity {
                 );
             }
             default: {
-                CaDebug_noimpl();
+                Debug_noimpl();
             }
         }
     }
 
+    
+    String::String(const Var & var) {
+        *this += var;
+    }
+
+    
+    const String & String::cast(const Boolean & boolean){
+        static String trueString  = ca("true");
+        static String falseString = ca("false");
+        return boolean ? trueString : falseString;
+    }
+
+    
+    const String & String::cast(const Undefined &){
+        static String undefinedString = ca("undefined");
+        return undefinedString;
+    }
+
+    
+    const String & String::cast(const Null &){
+        static String nullString = ca("null");
+        return nullString;
+    }
+
+    
+    String String::cast(const List & lval){
+        String str;
+        return Vtem::appendContainerToString(str, lval);
+    }
+
+    
+    String String::cast(List && rval){
+        if (rval.isEmpty()) {
+            return ca("[]");
+        }
+        Var & front(rval.front());
+        if (front.isString()){
+            return Vtem::appendContainerToString(front.string(), rval);
+        } else {
+            String str;
+            return Vtem::appendContainerToString(str, rval);
+        }
+    }
 
 }

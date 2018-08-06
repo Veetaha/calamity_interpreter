@@ -8,6 +8,9 @@
 #include <lexer.h>
 #include <token.h>
 #include "meta.h"
+#include "parser.h"
+#include "ast.h"
+
 /* Convenient macro in order not to mention each test suite's name for a group of related tests,
  * just use: #define CALA_TEST_SUITE SuiteClass
  * to mark a suite name for the following group of tests
@@ -24,33 +27,41 @@ int main(int argc, char ** argv) {
 
 
 struct LexerSplitTokensTest : public ::testing::Test {
-    typedef Calamity::Lexer     Lexer    ;
-    typedef Calamity::String    String   ;
-    typedef Calamity::Substring Substring;
-    typedef Calamity::cachar_t  cachar_t ;
-    typedef Calamity::Token     Token    ;
-    Lexer lexer;
-    String code;
-    String returned;
+    typedef Cala::LexicalInfo LexicalInfo;
+    typedef Cala::String      String     ;
+    typedef Cala::Substring   Substring  ;
+    typedef Cala::cachar_t    cachar_t   ;
+    typedef Cala::Token       Token      ;
+    typedef Cala::Exception   Exception  ;
+    LexicalInfo lexemes;
+    String errorString;
     typedef Token::Type T;
-    const String & split(const cachar_t * codeCstring){
-        code = codeCstring;
-        return returned = lexer.splitTokens(&code);
+    const LexerSplitTokensTest & split(const cachar_t * codeCString){
+        try {
+            lexemes = Cala::Lexer::splitTokens(String(codeCString));
+        } catch (Exception & exception){
+            errorString = exception.errorString().rval();
+        }
+        return *this;
     }
-    const String & split(String && str){
-        code = std::move(str);
-        return returned = lexer.splitTokens(&code);
+    const LexerSplitTokensTest & split(String && str){
+        try {
+            lexemes = Cala::Lexer::splitTokens(std::move(str));
+        } catch (Exception & exception) {
+            errorString = exception.errorString().rval();
+        }
+        return *this;
     }
 
-    const std::vector<Token> tokens() const {
-        return lexer.tokens();
+    const std::vector<Token> & tokens() const {
+        return lexemes.tokens();
     }
     Substring subcode(const size_t & begin, const size_t & end){
-        return Substring(code.begin() + begin, code.begin() + end);
+        return Substring(lexemes.code()->cbegin() + begin, lexemes.code()->cbegin() + end);
     }
 };
 
-std::ostream & operator<<(std::ostream & stream, const Calamity::String & string){
+std::ostream & operator<<(std::ostream & stream, const Cala::String & string){
     return stream << string.string();
 }
 
@@ -60,8 +71,8 @@ std::ostream & operator<<(std::ostream & stream, const Calamity::String & string
 
 #define token(TYPE, BEGIN, END) Token(TYPE, subcode((BEGIN), (END)))
 
-#define splitOK_EXP(CODE)     ({ASSERT_TRUE (split(CODE).empty()) << returned;})
-#define splitFAIL_EXP(CODE)   ({ASSERT_FALSE(split(CODE).empty()) << returned;})
+#define splitOK_EXP(CODE)     ({ASSERT_TRUE (split(CODE).errorString.empty()) << errorString;})
+#define splitFAIL_EXP(CODE)   ({ASSERT_FALSE(split(CODE).errorString.empty()) << errorString;})
 #define splitOK(CODE)   splitOK_EXP  (ca(CODE))
 #define splitFAIL(CODE) splitFAIL_EXP(ca(CODE))
 
@@ -69,7 +80,7 @@ std::ostream & operator<<(std::ostream & stream, const Calamity::String & string
     const Token expected[]{TOKENS};                          \
     ASSERT_EQ(tokens().size(), Meta::sizeat(expected));      \
     for (size_t i = 0; i < Meta::sizeat(expected); ++i){     \
-        ASSERT_TRUE(expected[i] == tokens()[i])              \
+        ASSERT_TRUE(expected[i] == tokens()[i])                  \
             << "failed at tokens()[" << i << ']';            \
     }})
 
@@ -85,9 +96,33 @@ CALA_TEST(emptyCode){
 
 CALA_TEST(oneNumberToken){
    splitOK("13");
-   ASSERT_EQ(tokens().size(), 1);
-   //
-   matchTokens(token(T::Number,0, 2));
+    ({
+        const Token expected[]{ Token(T::Number, subcode((0), (2))) };
+        switch (0)
+            case 0:
+            default:
+                if (const ::testing::AssertionResult gtest_ar = (::testing::internal::EqHelper<(
+                    sizeof(::testing::internal::IsNullLiteralHelper(tokens().size())) == 1)>::Compare(
+                    "tokens().size()", "Meta::sizeat(expected)", tokens().size(), Meta::sizeat(expected))));
+                else
+                    return ::testing::internal::AssertHelper(
+                        ::testing::TestPartResult::kFatalFailure, "_file_name_", 97,
+                        gtest_ar.failure_message()) = ::testing::Message();
+        for (size_t i = 0; i < Meta::sizeat(expected); ++ i) {
+            switch (0)
+                case 0:
+                default:
+                    if (const ::testing::AssertionResult gtest_ar_ = ::testing::AssertionResult(
+                        expected[i] == tokens()[i]
+                    ));
+                    else
+                        return ::testing::internal::AssertHelper(
+                            ::testing::TestPartResult::kFatalFailure, "_file_name_", 97,
+                            ::testing::internal::GetBoolAssertionFailureMessage(
+                                gtest_ar_, "expected[i] == tokens()[i]", "false", "true"
+                            ).c_str()) = ::testing::Message() << "failed at tokens()[" << i << ']';
+        }
+    });
 }
 
 CALA_TEST(oneEqualsToken){
@@ -98,16 +133,16 @@ CALA_TEST(oneEqualsToken){
 CALA_TEST(invalidChar){
    splitFAIL("№");
    splitFAIL("`");
-    splitFAIL("#");
+   splitFAIL("#");
 }
 
 CALA_TEST(unterminatedMLComment){
     expectTokensFor("/* treatAsDivMult /*",
         token(T::Division, 0, 1),
-        token(T::Multiplication, 1, 2),
+        token(T::Asterisk, 1, 2),
         token(T::Identifier, 3, 17),
         token(T::Division, 18, 19),
-        token(T::Multiplication, 19, 20)
+        token(T::Asterisk, 19, 20)
     );
     splitOK("// /* is part of SLComment");
     ASSERT_TRUE(tokens().empty());
@@ -193,8 +228,8 @@ CALA_TEST(keywords){
         ++toktype){
         suspectStr = Token::typeName(static_cast<Token::Type>(toktype));
         suspectStr += ca("_");
-        ASSERT_TRUE(split(std::move(suspectStr)).empty());
-        matchTokens(token(T::Identifier, 0, code.size()));
+        ASSERT_TRUE(split(std::move(suspectStr)).errorString.empty());
+        matchTokens(token(T::Identifier, 0, lexemes.code()->size()));
     }
 }
 
@@ -206,8 +241,7 @@ CALA_TEST(numberLiterals){
     expectTokensFor(".312",  token(T::Number, 0, 4));
     expectTokensFor("12.34", token(T::Number, 0, 5));
     expectTokensFor("65.",
-        token(T::Number, 0, 2),
-        token(T::Dot,    2, 3)
+        token(T::Number, 0, 3),
     );
 }
 
@@ -246,7 +280,7 @@ CALA_TEST(operators) {
     expectTokensFor("*****/%---+++",
         token(T::Power, 0, 2),
         token(T::Power, 2, 4),
-        token(T::Multiplication, 4, 5),
+        token(T::Asterisk, 4, 5),
         token(T::Division, 5, 6),
         token(T::Remainder, 6, 7),
         token(T::Decrement, 7, 9),
@@ -276,3 +310,143 @@ CALA_TEST(keyTokensInStringLiteral){
     );
 
 }
+
+
+struct StringTest : public ::testing::Test {
+    typedef Cala::String    String   ;
+    typedef Cala::Number    Number   ;
+    typedef Cala::Substring Substring;
+    typedef Cala::cachar_t  cachar_t ;
+    typedef Cala::Number    Double   ;
+    String string;
+};
+
+
+#undef  CALA_TEST_SUITE
+#define CALA_TEST_SUITE StringTest
+
+
+CALA_TEST(castStringToNumber) {
+    string = ca("1120");
+    EXPECT_EQ(Double::cast(string), 1120.0);
+    string =  ca("32.45");
+    EXPECT_EQ(Double::cast(string), 32.45);
+    string = ca(".500");
+    EXPECT_EQ(Double::cast(string), 0.5);
+}
+
+CALA_TEST(trimBegin_3LeadingSpaces) {
+    string = ca("   spaces");
+    string.trimBegin();
+    EXPECT_EQ(string, String(ca("spaces")));
+    // ---------------------------
+    string = ca("\n\t\vspaces");
+    string.trimBegin();
+    EXPECT_EQ(string, String(ca("spaces")));
+}
+
+CALA_TEST(trimBegin_1LeadingSpace) {
+    string = ca(" space");
+    string.trimBegin();
+    EXPECT_EQ(string, String(ca("space")));
+    string = ca("\tspace");
+    string.trimBegin();
+    EXPECT_EQ(string, String(ca("space")));
+}
+
+CALA_TEST(trimBegin_noLeadingSpaces) {
+    string = ca("no Leading spaces");
+    string.trimBegin();
+    EXPECT_EQ(string, String(ca("no Leading spaces")));
+}
+
+CALA_TEST(trimBegin_emptyString) {
+    string.trimBegin();
+    EXPECT_EQ(string, String());
+}
+
+CALA_TEST(trimEnd_3TrailingSpaces) {
+    string = ca("spaces   ");
+    string.trimEnd();
+    EXPECT_EQ(string, String(ca("spaces")));
+    // --------------------------------
+    string = ca("spaces\n\t\v");
+    string.trimEnd();
+    EXPECT_EQ(string, String(ca("spaces")));
+}
+
+CALA_TEST(trimEnd_1TrailingSpace) {
+    string = ca("space ");
+    string.trimEnd();
+    EXPECT_EQ(string, String(ca("space")));
+    //------------------------------
+    string = ca("space\n");
+    string.trimEnd();
+    EXPECT_EQ(string, String(ca("space")));
+}
+
+CALA_TEST(trimEnd_noTrailingSpaces) {
+    string = ca("no Trailing spaces");
+    string.trimEnd();
+    EXPECT_EQ(string, String(ca("no Trailing spaces")));
+}
+
+CALA_TEST(trimEnd_emptyString) {
+    string.trimEnd();
+    EXPECT_EQ(string, String());
+}
+
+CALA_TEST(trim_LeadingAndTrailingSpaces) {
+    string = ca("   spaces  ");
+    string.trim();
+    EXPECT_EQ(string, String(ca("spaces")));
+    // ---------------------------
+    string = ca("\n\t\vspaces\t\n\v\n\n\r");
+    string.trim();
+    EXPECT_EQ(string, String(ca("spaces")));
+}
+
+CALA_TEST(trim_onlyLeadingSpaces) {
+    string = ca(" space");
+    string.trim();
+    EXPECT_EQ(string, String(ca("space")));
+    string = ca("\n\v\n\r\tspace");
+    string.trim();
+    EXPECT_EQ(string, String(ca("space")));
+}
+
+CALA_TEST(trim_onlyTralingSpaces) {
+    string = ca("space    ");
+    string.trim();
+    EXPECT_EQ(string, String(ca("space")));
+    string = ca("space\n\v \n\r\t");
+    string.trim();
+    EXPECT_EQ(string, String(ca("space")));
+}
+
+
+CALA_TEST(trim_noLeadingAndTrailingSpaces) {
+    string = ca("no leading and trailing\n spaces");
+    string.trim();
+    EXPECT_EQ(string, String(ca("no leading and trailing\n spaces")));
+}
+
+CALA_TEST(trim_emptyString) {
+    string.trim();
+    EXPECT_EQ(string, String());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

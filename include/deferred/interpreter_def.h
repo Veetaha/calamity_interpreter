@@ -25,9 +25,9 @@ typedef struct __Calamity{
     const   String * code;
 } Calamity;
 
-extern Var * evaluate_new(Calamity * prog, Tree * ast);
+extern Var * evaluate_new(cala * prog, Tree * ast);
 
-void Calamity_setError(const char * msg, AstNode * node, Calamity * prog);
+void Calamity_setError(const char * msg, AstNode * node, cala * prog);
 
 void MACRO_FREE_DYNTYPE_ARR(Var ** arr, size_t size);
 

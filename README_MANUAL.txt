@@ -4,7 +4,11 @@
  * Telegram: @Simpliest_One
  * 
  * Special benedictions to my teacher Ruslan Gadyniak
- */ 
+ */
+
+ AHTUNG! Deprecated documentation, it will be totally
+ rewritten according to new standard
+
 
 Calamity dynamically typed language is a simple, 
 but effective tool to write small console programms.

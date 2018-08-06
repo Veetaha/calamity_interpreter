@@ -2,7 +2,7 @@
 #include <error.h>
 #include <wchar.h>
 
-namespace Calamity {
+namespace Cala {
 
 
     AstNodeType AstNode_typeAt(AstNode *self) {

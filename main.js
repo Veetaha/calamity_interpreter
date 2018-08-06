@@ -1,11 +1,8 @@
-try {
+let s, vasya;
 
-} catch (exeception) {}
-finally {}
-
-function func(numbers){
+function func(more, ...rest,) {
     if (typeof(numbers) !== "array")           // recursive calls are possible
-        return undefined;                     // (my computer stack handles about 5600 calls)
+        return undefined;
 
     var stat = [324., 5.421, 0];
     if (!numbers.size()) return stat;
@@ -20,14 +17,14 @@ function func(numbers){
             stat[1] = i;
         i = i + 1;
 
-        if (false) return unknownFunction(undeclaredIdentifer); // all runtime errors are checked at runtime blen
+        if (false) return unknownFunction(undeclaredIdentifer); 
         
         if (false) escape("Escape from all the functions at the stack");
 
     }
     return numbers[stat[0]] + numbers[stat[1]] + stat[2] + stat[2] / i;
 }
-
+/*
 // main code is below
 
 var userInput =  read();       // read accepts optional argument (string with file path)
@@ -35,7 +32,6 @@ var _array = digify(userInput);
 print(_array.size() + func(_array), endl);
 
 //return true; <-- optional return in main code also aborts workflow and returns needed value
-
 
 var str = read();
 var arr = digify(str);
@@ -54,3 +50,4 @@ while (i < arr.size()){
     i = i + 1;
 }
 print(arr.size(), ' ', max, ' ' , min, ' ' , sum, ' ' ,sum / i, endl);
+*/

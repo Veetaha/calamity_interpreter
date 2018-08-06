@@ -1,4 +1,4 @@
-#include <deferred/main_parser.h>
+#include <main_parser.h>
 #include <token.h>
 #include <wchar.h>
 #include <iterator.h>
@@ -444,7 +444,7 @@ Tree * Parser_buildNewAstTree(const register List * tokens, const String * code)
         .code = code
     };
     register Parser * const speedUpPerformance = &parser;
-    Tree * tree = Calamity(speedUpPerformance);
+    Tree * tree = cala(speedUpPerformance);
     if (parser.error){
         Cui_setFgColorOf(stderr, 500);
         String_writeTo(stderr, parser.error);

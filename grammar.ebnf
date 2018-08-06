@@ -1,83 +1,132 @@
+(* 
+    TODO: {
+        "add": [
+            "yield", "yield*",
+            "..." // rest and spread operator,
+            labels
+        ]
+    }
+*)
+var_keyword = "var" | "let" | "const";
+
 Calamity = {statement};
+statement = labels, (
+      funcdecl 
+    | vardecl 
+    | alter_st 
+    | cycle_st 
+    | block_st 
+    | blank_st 
+    | expression_st
+    | return_st 
+    | throw_st
+    | try_catch_st
+    | switch_st
+    | break_st
+    | continue_st
+);
 
-statement = funcdef | vardecl | alter_st | cycle_st | block_st | blank_st | expression_st | return_st;
-funcdef = "function", IDENTIFIER, func_params, statement;
-func_params = "(", [id_list], ")";
-id_list = IDENTIFIER,  {id_enum};
-id_enum = ",", IDENTIFIER;
+funcdecl = ["async"], "function", ["*"], IDENTIFIER, func_params, block_st;
+func_params   = "(", paramlist, [","] , ")"; (* optional trailing coma *)
+paramlist     = restparam | IDENTIFIER, [init], [",", paramlist];
+restparam     = "...", IDENTIFIER;
+init          = "=", assign;
 
-vardecl = "var", IDENTIFIER, [initialization], ";";
-initialization = "=", expression;
-alter_st = "if",  "(", expression, ")", statement, [else_st];
-else_st = "else", statement;
-cycle_st = "while", "(", expression, ")", statement;
-block_st = "{", {statement}, "}";
-blank_st = ";";
-return_st = "return", expression, ";";
+vardecl          = var_keyword, IDENTIFIER, [init], {vardecl_ap} ";";
+vardecl_ap       = ",", IDENTIFIER, [init];
+alter_st         = "if",  "(", expression, ")", statement, [else_st];
+else_st          = "else", statement;
+cycle_st         = while_st, do_while_st, for_st;
+while_st         = "while", "(", expression, ")", statement;
+do_while_st      = "do", statement, "while", "(/", expression, ")", ";";
+for_st           = "for", "(", for_st_ap;
+for_st_ap        = for_decl | for_expr_init_st;
+for_decl         = var_keyword, IDENTIFIER, (for_inof_st | for_init_st);
+for_inof_st      = ("in" | "of"), expression, ")", statement;
+for_decl_init_st = [init], {vardecl_ap}, for_init_st_ap;
+for_init_st_ap   = ";", [expression], ";" [expression], ")", statement;
+for_expr_init_st = expression, for_init_st_ap;
+block_st         = "{", {statement}, "}";
+blank_st         = ";";
+return_st        = "return", [expression], ";";
+throw_st         = "throw",  expression, ";";
+try_catch_st     = "try", block_st, "catch", "(", IDENTIFIER, ")", block_st;
+
+switch_st        = "switch", "(", expression, ")", "{", cases, "}";
+(*cases          = ((case_lbl, {case_lbl}, [default_st]), | default_lbl, {case_lbl}, statement),
+                  {case_lbl, {case_lbl}, statement};*)
+cases            = case_lbl, (statement_pack | cases) | default_lbl, {case_lbl}, {cases_only};
+cases_only       = case_lbl, {case_lbl}, statement_pack;
+
+statement_pack = statement, {statement};
+
+case_lbl       = "case", expression, ":";
+default_lbl    = "default", ":";
+
+break_st       = "break", ";";
+continue_st    = "continue", ";";
+
 expression_st = expression, ";";
-expression = assign;
+expression = coma;
 
+(*L-R*) coma = assign, {",", assign};
+(*R-L*) assign = ternary_cond, {(
+    "="     | "+="  | "-="   | "*="  | "/=" | "&=" | "|="
+    | "<<=" | ">>=" | ">>>=" | "**=" | "^="
+), ternary_cond};
+(*R-L*) ternary_cond = log_or, ["?", assign, ":", assign];
+(*L-R*) log_or       = log_and, {"||", log_and};
+(*L-R*) log_and      = bit_or, {"&&", bit_or};
+(*L-R*) bit_or       = bit_xor, {"|", bit_xor};
+(*L-R*) bit_xor      = bit_and, {"^", bit_and};
+(*L-R*) bit_and      = equality, {"&", equality};
+(*L-R*) equality     = compar_in, {("==" | "!=" | "===" | "!=="), compar_in};
+(*L-R*) compar_in    = bit_shift, {(">"|"<"|"<="|">="|"in"|"instanceof"), bit_shift};
+(*L-R*) bit_shift    = add, {(">>" | ">>>" | "<<"), add};
+(*L-R*) add          = mult, {("+" | "-"), mult};
+(*L-R*) mult         = exp, {("*" | "/" | "%"), exp};
+(*R-L*) exp          = prefix, {"**", prefix};
+(*R-L*) prefix       = postfix | delete | prefix_ap;
+(*n/a*) prefix_ap    = ("++"|"--"|"+"|"-"|"!"|"~"|"await"|"typeof"|"void"), prefix;
+(*n/a*) delete       = "delete", (IDENTIFIER | postfix, (".", IDENTIFIER | "[", expression, "]")),
+(*n/a*) postfix      = new, ["++" | "--"];
+(*R-L*) new          = primary | "new", new;
+(*n/a*) primary      = parentheses, [primary_operator];
+(*L-R*) primary_operator   = member_access | comp_member_access | function_call;
+(*L-R*) member_access      = ".", IDENTIFIER, {primary_operator};
+(*L-R*) comp_member_access = "[", expression, "]", {primary_operator};
+(*L-R*) function_call      = "(", expr_list ")", {primary_operator};
+(*n/a*) parentheses        = literal | parentheses_ap;
+(*n/a*) parentheses_ap     = "(", expression, ")";
 
-assign = or, [assign_ap];
-assign_ap = ("=" | "+=" | "-=" | "*=" | "/="), or, [assign_ap];
-
-or = and, [or_ap];
-or_ap = "||", and, [or_ap];
-
-and = equaling, [and_ap];
-add_ap = "&&", equaling, [and_ap];
-
-equaling = comparison, [equaling_ap];
-equaling_ap = ("==" | "!=" | "===" | "!=="), comparison, [equaling_ap];
-
-comparison = add, [comparison_ap];
-comparison_ap = (">" | "<" | "<=" | ">="), add, [comparison_ap];
-
-add = mult, [add_ap];
-add_ap = ("+" | "-"), mult, [add_ap],;
-
-mult = unary, [mult_ap];
-mult_ap = ("*" | "/" | "%"), unary, [mult_ap];
-
-
-unary = ["+" | "-" | "!"], power;
-
-power = subscript, [power_ap];
-power_ap = "**", subscript, [power_ap];
-
-subscript = primary, [subscript_ap];
-subscript_ap = "[", expression, "]", [subscript_ap];
-
-primary = literal | parentheses | var_or_call ;
-
-literal = value_identifier | string_or_number | list_literal | function_literal | object_literal;
-value_identifier = "true" | "false" | "null" | "undefined" | "NaN" | "Infinity" | "endl";
+literal = primitive_identifier
+        | string_or_number
+        | list_literal
+        | id_or_funclit
+        | object_literal
+        | IDENTIFIER;
+primitive_identifier = "true"
+                    | "false"
+                    | "null"
+                    | "undefined"
+                    | "NaN"
+                    | "Infinity"
+                    | "endl";
 string_or_number = STRING | NUMBER;
 
-list_literal = "[", [expr_list], "]";
-expr_list = expression, {expr_enum};
-expr_enum = ",", expression;
+list_literal = "[", expr_list, "]";
+expr_list    = [assign], {",", assign};
 
-function_literal = "function", [IDENTIFIER], func_params, statement;
+id_or_funclit      = lambda | arrowfunc;
+lambda             = ["async"]", function", "*", [IDENTIFIER], func_params, block_st;
+arrowfunc          = no_paren_arrowfunc | paren_arrowfunc;
+no_paren_arrowfunc = IDENTIFIER, [arrowfunc_body];
+arrowfunc_body     = "=>", (block_st | assign);
+paren_arrowfunc    = func_params, arrowfunc_body; (*ambiguity with 'parentheses' rule*)
 
-object_literal = "{" [object_properties] "}";
-object_propname = IDENTIFIER | string_or_number | ("[", expression, "]");
-object_properties = object_propname, ":", expression, [object_proplist];
-object_proplist = ",", object_propname, ":", expression, [object_proplist];
-
-parentheses = "(", expression, ")";
-
-var_or_call = IDENTIFIER, [function_call];
-function_call = "(", [expr_list] ")";
-
-
-
-
-
-
-
-
-
-
-
+object_literal     = "{", [object_property], {object_property_ap}, "}";
+object_property    = object_propname, ":", assign;
+object_property_ap = ",", object_property
+object_propname    = IDENTIFIER | string_or_number | object_comp_prop;
+object_comp_prop   = "[", expression, "]"
 

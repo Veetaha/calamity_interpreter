@@ -1,269 +1,142 @@
 #include "var.h"
-#include "error.h"
-#include "var_double.h"
+#include "defs.h"
+
+#include "var_number.h"
 #include "var_boolean.h"
 #include "var_list.h"
 #include "var_string.h"
 #include "var_object.h"
 #include "var_function.h"
 #include "var_integer.h"
+#include <memory>
 
-namespace Calamity {
+namespace Cala {
 
-	Var::Var(const Var::Type &type) : m_type(type) {
+	Var::Var(const Var::Type &type)
+		: m_type(type) {
 		switch (m_type) {
 			case Type::Null:
-			case Type::Undefined: {
-				m_value = nullptr;
-				return;
-			}
-			case Type::List: {
-				m_value = new List;
-				return;
-			}
-			case Type::String: {
-				m_value = new String;
-				return;
-			}
-			case Type::Boolean: {
-				m_value = new Boolean;
-				return;
-			}
-			case Type::Number: {
-				m_value = new Double;
-				return;
-			}
+			case Type::Undefined:{ return; }// nothing to initialize
+			case Type::Boolean:  { m_value.boolean = false;      return; }
+			case Type::Number:   { m_value.number  = 0;          return; }
+			case Type::String:   { m_value.string  = new String; return; }
+			case Type::List:     { m_value.list    = new List;   return; }
 			default: {
-				CaDebug_noimpl();
+				Debug_noimpl();
 			}
 		}
 	}
 
-	void Var::setNewValue() {
-		CaDebug_noimpl();
-	}
-
-	Var::Var(const double &d)
-			: m_type(Type::Number), m_value(new Double(d)) {}
-
-	Var::Var(const Double &d)
-			: m_type(Type::Number), m_value(new Double(d)) {}
-
-	Var::Var(const bool &b)
-			: m_type(Type::Boolean), m_value(new Boolean(b)) {}
-
-	Var::Var(const Boolean &b)
-			: m_type(Type::Boolean), m_value(new Boolean(b)) {}
-
-	typedef ::Calamity::String String;
-
-	Var::Var(String * const & string)
-			: m_type(Var::Type::String), m_value(string) {}
-
-	Var::Var(String && string)
-			: m_type(Type::String),
-			  m_value(new String(std::move(string))) {}
-
-	Var::Var(List * const & list)
-			: m_type(Type::List),
-			  m_value(list) {}
-
-	Var::Var(List &&list)
-			: m_type(Type::List),
-			  m_value(new List(std::move(list))) {}
-
-	Var::~Var() {
-		deleteValue();
-	}
-
-	Var::Var(Var &&rvalue)
-			: m_value(rvalue.m_value),
-			  m_type(rvalue.m_type) {
-		rvalue.m_type = Type::Undefined;
-		rvalue.m_value = nullptr;
-	}
-
-	Var::Var(const Var &lvalue) {
-		switch (lvalue.type()) {
-			case Type::Boolean:   { m_value = new Boolean(lvalue.boolean()); return; }
-			case Type::Number:    { m_value = new Double(lvalue.number());   return; }
-			case Type::Undefined: { m_value = nullptr;                       return; }
-			case Type::String:    { new String(lvalue.string());             return; }
-			case Type::List:      { new List(lvalue.list());                 return; }
+	Var::Var(const Var & lvalue)
+		: m_type(lvalue.m_type) {
+		switch (lvalue.m_type) {
+			case Type::Null:
+			case Type::Undefined: { return; } // no value is needed
+			case Type::Boolean:   { m_value.boolean = lvalue.boolean();  return; }
+			case Type::Number:    { m_value.number  = lvalue.number();   return; }
+			case Type::String:    { m_value.string = new String(lvalue.string()); return; }
+			case Type::List:      { m_value.list   = new List(lvalue.list());     return; }
 			default: {
-				CaDebug_noimpl();
+				Debug_noimpl();
 			}
 		}
 	}
 
-	Var Var::makeList() {
-		return new List;
-	}
-
-	Var Var::makeString() {
-		return new String;
-	}
-
-	Var Var::copy(const Var &toCopy) {
-		switch (toCopy.type()) {
-			case Type::Boolean: {
-				return toCopy.boolean();
-			}
-			case Type::Number: {
-				return toCopy.number();
-			}
-			case Type::Undefined: {
-				return Var();
-			}
-			case Type::String: {
-				return new String(toCopy.string());
-			}
-			case Type::List: {
-				return new List(toCopy.list());
-			}
+	ostream &operator<<(ostream &stream, const Var &self) {
+		switch (self.m_type) {
+			case Var::Type::Null:      { return stream << "null";         }
+			case Var::Type::Undefined: { return stream << "undefined";    }
+			case Var::Type::Boolean:   { return stream << self.boolean(); }
+			case Var::Type::Number:    { return stream << self.number();  }
+			case Var::Type::String:    { return stream << self.string();  }
+			case Var::Type::List:      { return stream << self.list();    }
 			default: {
-				CaDebug_noimpl();
+				Debug_noimpl();
 			}
 		}
 	}
 
-	bool Var::isNumber() const {
-		return m_type == Type::Number;
+	String &Var::string() & {
+		Debug_suppose(isString());
+		return *m_value.string;
 	}
 
-	bool Var::isBoolean() const {
-		return m_type == Type::Boolean;
+	Number &Var::number() & {
+		Debug_suppose(isNumber());
+		return m_value.number;
 	}
 
-	bool Var::isString() const {
-		return m_type == Type::String;
+	Boolean &Var::boolean() & {
+		Debug_suppose(isBoolean());
+		return m_value.boolean;
 	}
 
-	bool Var::isUndefined() const {
-		return m_type == Type::Undefined;
+	List & Var::list() & {
+		Debug_suppose(isList());
+		return *m_value.list;
 	}
 
-	bool Var::isList() const {
-		return m_type == Type::List;
+	Object &Var::object() & {
+		Debug_suppose(isObject());
+		return *m_value.object;
 	}
 
-	bool Var::isNull() const {
-		return m_type == Type::Null;
+	Function &Var::function() & {
+		Debug_suppose(isFunction());
+		return *m_value.function;
 	}
 
-	bool Var::isFunction() const {
-		return m_type == Type::Function;
+	const String &Var::string() const & {
+		Debug_suppose(isString());
+		return *m_value.string;
 	}
 
-	bool Var::isObject() const {
-		return m_type == Type::Object;
+	const Number &Var::number() const & {
+		Debug_suppose(isNumber());
+		return m_value.number;
 	}
 
-	Var::Type Var::type() const {
-		return m_type;
+	const Boolean &Var::boolean() const & {
+		Debug_suppose(isBoolean());
+		return m_value.boolean;
 	}
 
-
-	std::wostream &operator<<(std::wostream &stream, const Var &self) {
-		switch (self.type()) {
-			case Var::Type::Undefined: {
-				return stream << "undefined";
-			}
-			case Var::Type::Boolean: {
-				return stream << self.boolean();
-			}
-			case Var::Type::Number: {
-				return stream << self.number();
-			}
-			case Var::Type::String: {
-				return stream << self.string();
-			}
-			case Var::Type::List: {
-				return stream << self.list();
-			}
-			default: {
-				CaDebug_noimpl();
-			}
-		}
+	const List & Var::list() const & {
+		Debug_suppose(isList());
+		return *m_value.list;
 	}
 
-	String &Var::string() {
-		CaDebug_suppose(isString());
-		return *static_cast<String *>(m_value);
+	const Object &Var::object() const & {
+		Debug_suppose(isObject());
+		return *m_value.object;
 	}
 
-	Double &Var::number() {
-		CaDebug_suppose(isNumber());
-		return *static_cast<Double *>(m_value);
+	const Function &Var::function() const & {
+		Debug_suppose(isFunction());
+		return *m_value.function;
 	}
 
-	Boolean &Var::boolean() {
-		CaDebug_suppose(isBoolean());
-		return *static_cast<Boolean *>(m_value);
+	Integer Var::integer() const {
+		Debug_suppose(isNumber());
+		return cast<Integer>(number());
 	}
 
-	List & Var::list() {
-		CaDebug_suppose(isList());
-		return *static_cast<List *>(m_value);
-	}
-
-	Object &Var::object() {
-		CaDebug_suppose(isObject());
-		return *static_cast<Object *>(m_value);
-	}
-
-	Function &Var::function() {
-		CaDebug_suppose(isFunction());
-		return *static_cast<Function *>(m_value);
-	}
-
-	const String &Var::string() const {
-		CaDebug_suppose(isString());
-		return *static_cast<String *>(m_value);
-	}
-
-	const Double &Var::number() const {
-		CaDebug_suppose(isNumber());
-		return *static_cast<Double *>(m_value);
-	}
-
-	const Boolean &Var::boolean() const {
-		CaDebug_suppose(isBoolean());
-		return *static_cast<Boolean *>(m_value);
-	}
-
-	const List & Var::list() const {
-		CaDebug_suppose(isList());
-		return *static_cast<List *>(m_value);
-	}
-
-	const Object &Var::object() const {
-		CaDebug_suppose(isObject());
-		return *static_cast<Object *>(m_value);
-	}
-
-	const Function &Var::function() const {
-		CaDebug_suppose(isFunction());
-		return *static_cast<Function *>(m_value);
-	}
 
     bool Var::isNegative() const               { return number().isNegative();  }
-	Integer64 Var::toInteger64() const         { return number().toInteger64(); }
-	int64_t Var::to_int64() const              { return number().to_int64();    }
-	const cachar_t * Var::typeName() const         { return typeName(m_type);       }
+	const cachar_t * Var::typeName() const     { return typeName(m_type);       }
 
 	const cachar_t * Var::typeName(const Type &type) {
 		switch (type) {
+			case Type::Null:      return ca("null");
 			case Type::Undefined: return ca("undefined");
 			case Type::Boolean:   return ca("boolean");
 			case Type::Number:    return ca("number");
 			case Type::String:    return ca("string");
 			case Type::List:      return ca("list");
-			case Type::Null:      return ca("null");
 			case Type::Function:  return ca("function");
 			case Type::Object:    return ca("object");
 		}
-		CaDebug_unreachable();
+		Debug_unreachable();
 	}
 
 	const String & Var::typeString() const {
@@ -280,328 +153,248 @@ namespace Calamity {
         static String function  = ca("function");
         static String object    = ca("object");
         switch (type) {
+			case Type::Null:      return null;
             case Type::Undefined: return undefined;
             case Type::Boolean:   return boolean;
             case Type::Number:    return number;
             case Type::String:    return string;
             case Type::List:      return list;
-            case Type::Null:      return null;
             case Type::Function:  return function;
             case Type::Object:    return object;
         }
-        CaDebug_unreachable();
+        Debug_unreachable();
     }
 
 
 	void Var::deleteValue() {
 		switch (m_type){
-			case Type::Boolean:  { delete static_cast<Boolean *> (m_value); return; }
-			case Type::Number:   { delete static_cast<Double *>  (m_value); return; }
-			case Type::String:   { delete static_cast<String *>  (m_value); return; }
-			case Type::List:     { delete static_cast<List *>    (m_value); return; }
-			case Type::Function: { delete static_cast<Function *>(m_value); return; }
-			case Type::Object:   { delete static_cast<Object *>  (m_value); return; }
-			default : return; // case Type::Undefined or Type::Null, m_value == nullptr
+			case Type::String:   { delete m_value.string;   return; }
+			case Type::List:     { delete m_value.list;     return; }
+			case Type::Function: { delete m_value.function; return; }
+			case Type::Object:   { delete m_value.object;   return; }
+			default : return; // nothing to delete or call destructor for non-pointer types
 		}
 	}
 
-	void Var::setNull() {
-		deleteValue();
-		m_type = Type::Null;
-	}
 
-	void Var::setUndefined() {
-		deleteValue();
-		m_type = Type::Undefined;
-	}
 
 	Var & Var::operator=(const Var & var) {
-		switch (var.m_type){
-			case Type::Undefined: { setUndefined(); return *this; }
-			case Type::Null:      { setNull();      return *this; }
-			case Type::String:    {
-				return *this = String(var.string());
-			}
+		if (this == &var) { return *this; } // self assignment
+		switch (var.m_type) {
+			case Type::Null:      { return *this = null;          }
+			case Type::Undefined: { return *this = undefined;     }
+			case Type::Boolean:   { return *this = var.boolean(); }
+			case Type::Number:    { return *this = var.number();  }
+			case Type::String:    { return *this = var.string();  }
+			case Type::List:      { return *this = var.list();    }
 			case Type::Function: {
-				CaDebug_noimpl();
+				Debug_noimpl();
 				return *this;
 			}
 			case Type::Object:{
-				CaDebug_noimpl();
+				Debug_noimpl();
 				return *this;
 			}
-			case Type::Number:{
-				return *this = var.number();
-			}
-			case Type::List:{
-				return *this = List(var.list());
-			}
 		}
-		CaDebug_unreachable();
+		Debug_unreachable();
 	}
 
-	Var & Var::operator=(const Double & number) {
-		return *this = number.value();
+	Var & Var::operator=(Var && rvar) noexcept {
+		Debug_suppose(&rvar != this); // no self assignment for rvalues
+		switch (rvar.m_type){
+			case Type::Null:      { return *this = null;      }
+			case Type::Undefined: { return *this = undefined; }
+			case Type::Boolean:   { return *this = rvar.boolean(); }
+			case Type::Number:    { return *this = rvar.number();  }
+			case Type::String:    { *this = rvar.stringPtr(); break; }
+			case Type::List:      { *this = rvar.listPtr();   break; }
+			case Type::Function:  { Debug_noimpl(); break; }
+			case Type::Object:    { Debug_noimpl(); break; }
+		}
+		rvar.m_type = Type::Undefined;
+		return *this;
+	}
+
+	Var & Var::operator=(const Number & number) {
+		if (!this->isNumber()) {
+			deleteValue();
+			m_type = Type::Number;
+		}
+		m_value.number = number;
+		return *this;
 	}
 
 	Var & Var::operator=(const Boolean & boolean) {
-		return *this = boolean.value();
-	}
-
-	Var & Var::operator=(Var && rvar) {
-		CaDebug_noimpl();
-	}
-
-
-	Var & Var::operator=(String && string) {
-		if (isString()) {
-			*static_cast<String *>(m_value) = std::move(string);
-		} else {
-			CaDebug_log(ca("Performing type switch from ") << typeName() << ca(" to string"));
+		if (!this->isBoolean()) {
 			deleteValue();
-			m_value = new String(std::move(string));
-			m_type = Type::String;
-		}
-		return *this;
-	}
-
-
-	Var &Var::operator=(String *const &stringPtr) {
-		CaDebug_suppose(stringPtr != m_value);
-		deleteValue();
-		m_type = Type::String;
-		m_value = stringPtr;
-		return *this;
-	}
-
-	Var &Var::operator=(List && list) {
-		if (isList()) {
-			*static_cast<List *>(m_value) = std::move(list);
-		} else {
-			CaDebug_log(ca("Performing type switch from ") << typeName() << ca(" to list"));
-			deleteValue();
-			m_value = new List(std::move(list));
-			m_type = Type::List;
-		}
-		return *this;
-	}
-
-	Var &Var::operator=(List *const & listPtr) {
-		CaDebug_suppose(listPtr != m_value);
-		deleteValue();
-		m_type = Type::List;
-		m_value = listPtr;
-		return *this;
-	}
-
-	Var &Var::operator=(const double &floatingPoint) {
-		if (isNumber()) {
-			*static_cast<Double *>(m_value) = floatingPoint;
-		} else {
-			CaDebug_log(ca("Performing type switch from ") << typeName() << ca(" to number"));
-			deleteValue();
-			m_value = new Double(floatingPoint);
-			m_type = Type::Number;
-		}
-		return *this;
-	}
-
-	Var &Var::operator=(Double *const &doubleClass) {
-		CaDebug_suppose(doubleClass != m_value);
-		deleteValue();
-		m_type = Type::Number;
-		m_value = doubleClass;
-		return *this;
-	}
-
-	Var &Var::operator=(const bool &boolean) {
-		if (isBoolean()) {
-			*static_cast<Boolean *>(m_value) = boolean;
-		} else {
-			CaDebug_log(ca("Performing type switch from ") << typeName() << ca(" to boolean"));
-			deleteValue();
-			m_value = new Boolean(boolean);
 			m_type = Type::Boolean;
 		}
+		m_value.boolean = boolean;
 		return *this;
 	}
 
-	Var &Var::operator=(Boolean * const & booleanClass) {
-		CaDebug_suppose(booleanClass != m_value);
+	Var & Var::operator=(String && string) {
+		if (this->isString()) {
+			*m_value.string = std::move(string);
+		} else {
+			Debug_log(ca("variable changed type from ") << typeName() << ca(" to string"));
+			deleteValue();
+			m_type = Type::String;
+			m_value.string = new String(std::move(string));
+		}
+		return *this;
+	}
+
+	Var & Var::operator=(List && list) {
+		if (this->isList()) {
+			*m_value.list = std::move(list);
+		} else {
+			Debug_log(ca("variable changed type from ") << typeName() << ca(" to list"));
+			deleteValue();
+			m_type = Type::List;
+			m_value.list = new List(std::move(list));
+		}
+		return *this;
+	}
+
+	Var & Var::operator=(const cachar_t & character){
+		if (this->isString()) {
+			*m_value.string = character;
+		} else {
+			Debug_log(ca("variable changed type from ") << typeName() << ca(" to string"));
+			deleteValue();
+			m_type = Type::String;
+			m_value.string = new String(character);
+		}
+		return *this;
+	}
+
+	Var & Var::operator=(const String & string) {
+		if (this->isString()) {
+			*m_value.string = string;
+		} else {
+			Debug_log(ca("variable changed type from ") << typeName() << ca(" to string"));
+			deleteValue();
+			m_type = Type::String;
+			m_value.string = new String(string);
+		}
+		return *this;
+	}
+
+	Var & Var::operator=(const List & list) {
+		if (this->isList()) {
+			*m_value.list = list;
+		} else {
+			Debug_log(ca("variable changed type from ") << typeName() << ca(" to list"));
+			deleteValue();
+			m_type = Type::List;
+			m_value.list = new List(list);
+		}
+		return *this;
+	}
+
+
+	Var &Var::operator=(String * const &stringPtr) {
+		// debug check for self assignment
+		Debug_supposeIf(isString(), m_value.string != stringPtr);
 		deleteValue();
-		m_type = Type::Boolean;
-		m_value = booleanClass;
+		m_type = Type::String;
+		m_value.string = stringPtr;
 		return *this;
 	}
 
-
-	Exception Var::invalidBinaryOperand(const char *const &oper, Var &rightOperand) {
-		String error(ca("invalid operands for binary operator ("));
-		error += this->typeName();
-		error += ca(' ');
-		error += oper;
-		error += ca(' ');
-		error += rightOperand.typeName();
-		error += ca(')');
-		return Exception(std::move(error));
+	Var &Var::operator=(List * const & listPtr) {
+		// debug check for self assignment
+		Debug_supposeIf(isList(), m_value.list != listPtr);
+		deleteValue();
+		m_type = Type::List;
+		m_value.list = listPtr;
+		return *this;
 	}
 
-	Var &Var::operator+=(Var &var) {
-		if (var.isUndefined() || this->isUndefined()) {
-			setUndefined();
-			return *this;
+	Var &Var::operator=(const float_t & floatingPoint) {
+		if (!this->isNumber()){
+			deleteValue();
+			m_type = Type::Number;
 		}
-		CaDebug_noimpl();
+		m_value.number = floatingPoint;
+		return *this;
 	}
 
-	Var &Var::assignAddRvalue(Var &var) {
-		switch (m_type) {
-			case Type::Undefined:
-				return *this;
-			case Type::Boolean: {
-				return assignAddBooleanRvalue(var);
-			}
-			case Type::String: {
-				return assignAddStringRvalue(var);
-			}
-			case Type::List: {
-				CaDebug_noimpl();
-//				return assignAddVectorRvalue(var);
-			}
-			case Type::Number: {
-				return assignAddNumberRvalue(var);
-			}
+
+	Var &Var::operator=(const bool & boolean) {
+		if (!this->isBoolean()) {
+			deleteValue();
+			m_type = Type::Boolean;
 		}
+		m_value.boolean = boolean;
 		return *this;
 	}
 
-	Var &Var::assignAddLvalue(Var &var) {
-		switch (m_type) {
-			case Type::Undefined:
-				return *this;
-			case Type::Boolean: {
-				return assignAddBooleanLvalue(var);
-			}
-			case Type::String: {
-				return assignAddStringLvalue(var);
-			}
-			case Type::List: {
-				CaDebug_noimpl();
-//				return assignAddVectorLvalue(var);
-			}
-			case Type::Number: {
-				CaDebug_noimpl();
-//				return assignAddNumberLvalue(var);
-			}
-			default: {
-				CaDebug_noimpl();
-			}
-		}
-	}
+	Var &Var::operator+=(const Var &) { // unused parameter 'lvalue' whilst unimplemeted
 
-	Var &Var::assignAddBooleanRvalue(Var &var) {
-		throw invalidBinaryOperand("+=", var);
-	}
-
-	Var &Var::assignAddBooleanLvalue(Var &var) {
-		throw invalidBinaryOperand("+=", var);
-	}
-
-	Var &Var::assignAddStringRvalue(Var &var) {
-		CaDebug_noimpl();
-//		var.appendNumberToString(this->string());
-		return *this;
-	}
-
-	Var &Var::assignAddStringLvalue(Var &var) {
-		CaDebug_noimpl();
-//		var.appendNumberToString(this->string());
-		return *this;
-	}
-
-//	Var &Var::assignAddVectorRvalue(Var &var) {
-//		if (var.isList()) {
-//			this->vector().reserve(vector().size() + var.vector().size());
-//			for (Var &item : var.list()) {
-//				vector().emplace_back(std::move(item));
-//			}
-//		} else {
-//			vector().emplace_back(std::move(var));
-//		}
-//		return *this;
-//	}
-
-//	Var &Var::assignAddVectorLvalue(Var &var) {
-//		if (var.isList()) {
-//			this->vector().reserve(vector().size() + var.vector().size());
-//			for (Var &item : var.list()) {
-//				vector().emplace_back(copy(item));
-//			}
-//		} else {
-//			vector().emplace_back(copy(var));
-//		}
-//		return *this;
-//	}
-
-	Var &Var::assignAddNumberRvalue(Var &var) {
-		switch (var.type()) {
-			case Type::Number: {
-				number() += var.number();
-				break;
-			}
-			case Type::List: {
-				CaDebug_noimpl();
-//				assignPrependToVector(var);
-				break;
-			}
-
-		}
-		return *this;
+		Debug_noimpl();
 	}
 
 
-	Var Var::operator==(Var &other) {
-		CaDebug_noimpl();
-//		if (other.m_type != m_type) {
-//			return getRvalue(false, other);
-//		} else if (this == &other) {
-//			return getRvalue(true, other);
-//		}
-//		switch (m_type) {
-//			case Type::Undefined:
-//				return true;
-//			case Type::String: {
-//				return this->string() == other.string();
-//			}
-//			case Type::Boolean: {
-//				return getRvalue(this->boolean() == other.boolean(), other);
-//			}
-//			case Type::Number: {
-//				return this->number() == other.number();
-//			}
-//			case Type::List: {
-//				if (this->list().size() != other.list().size()) {
-//					return false;
-//				} else {
-//					auto selfIterator = this->list().begin();
-//					auto otherIterator = other.list().begin();
-//					auto selfEndIterator = this->list().end();
-//					while (selfIterator != selfEndIterator) {
-//						if (*selfIterator != *otherIterator) {
-//							return false;
-//						}
-//						++selfIterator;
-//						++otherIterator;
-//					}
-//					return true;
-//				}
-//			}
-//			default: {
-//				CaDebug_noimpl();
-//			}
-//		}
-	}
 
+    Var & Var::morphToPrimitive() && {
+        switch (m_type) {
+            default: { return *this; } // non-primitive are functions and objects and lists
+            case Type::List:      { return *this = cast<String>(list()); }
+            case Type::Function:  { Debug_noimpl(); }
+            case Type::Object:    { Debug_noimpl(); }
+        }
+        return *this;
+    }
+
+
+    Var & Var::morphToBoolean() && {
+        switch (m_type) {
+            case Type::Null:
+            case Type::Undefined: { *this = false;                                     break; }
+            case Type::Boolean:   {                                                    break; }
+            case Type::Number:    { *this = cast<Boolean>(number());                   break; }
+            case Type::String:    { *this = cast<Boolean>(string());                   break; }
+            case Type::List:
+            case Type::Function:
+            case Type::Object:    { *this = true;                                      break; }
+        }
+        return *this;
+    }
+
+    Var & Var::morphToNumber() && {
+        switch (m_type) {
+            case Type::Null:      { *this = cast<Number>(null);                     break; }
+            case Type::Undefined: { *this = cast<Number>(undefined);                break; }
+            case Type::Boolean:   { *this = cast<Number>(boolean());                break; }
+            case Type::Number:    {                                                 break; }
+            case Type::String:    { *this = cast<Number>(string());                 break; }
+            case Type::List:
+            case Type::Function:
+            case Type::Object:    { *this = Number::nan;                            break; }
+        }
+        return *this;
+    }
+
+
+
+
+
+
+
+
+
+
+
+    Exception Var::invalidBinaryOperand(const cachar_t * const &oper, const Var & rightOperand) {
+        String error;
+        error.push_back(
+            ca("invalid operands for binary operator ["),
+            this->typeName(), ca(' '), oper, ca(' '), rightOperand.typeName(), ca(']')
+        );
+        return Exception(error.rval());
+    }
 
 
 

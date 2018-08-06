@@ -1,13 +1,15 @@
 //
 // Created by tegeran on 27.06.18.
 //
-
-#include "var_list.h"
-#include "var_double.h"
-#include "var_string.h"
 #include <utility>
+#include "var_list.h"
+#include "var.h"
+#include "var_number.h"
+#include "var_string.h"
 
-namespace Calamity {
+
+
+namespace Cala {
 
 	int64_t List::size() const {
 		return m_vector.size();
@@ -16,7 +18,7 @@ namespace Calamity {
 	List::List(const List &lvalue)
 		: m_vector(lvalue.m_vector) {}
 
-	List::List(List && rvalue)
+	List::List(List && rvalue) noexcept
 		: m_vector(std::move(rvalue.m_vector)){}
 
 	List &List::operator=(const List &lvalue){
@@ -24,7 +26,7 @@ namespace Calamity {
 		return *this;
 	}
 
-	List &List::operator=(List &&rvalue){
+	List &List::operator=(List &&rvalue) noexcept{
 		m_vector = std::move(rvalue.m_vector);
 		return *this;
 	}
@@ -92,39 +94,31 @@ namespace Calamity {
 		return !m_vector.empty();
 	}
 
-	bool List::to_bool() const {
-		return !m_vector.empty();
-	}
-
-	Boolean List::toBoolean() const {
-		return !m_vector.empty();
-	}
-
 	Var &List::operator[](const Var &index) &{
-		checkReaderIndex(index);
-		return m_vector[index.to_int64()];
+        checkReadIndex(index);
+		return m_vector[index.integer()];
 	}
 
 	Var &&List::operator[](const Var &index) &&{
-		return std::move(static_cast<List &>(*this).operator[](index));
+		return static_cast<Var &&>(static_cast<List &>(*this).operator[](index));
 	}
 
 
 	void List::insert(const Var &index, Var &&rvalue) {
-		checkInserterIndex(index);
-		m_vector.emplace(m_vector.begin() + index.to_int64(), std::move(rvalue));
+        checkInsertIndex(index);
+		m_vector.emplace(m_vector.begin() + index.integer().value(), std::move(rvalue));
 	}
 
 	void List::insert(const Var &index, const Var &lvalue) {
-		checkInserterIndex(index);
-		m_vector.insert(m_vector.begin() + index.to_int64(), lvalue);
+        checkInsertIndex(index);
+		m_vector.insert(m_vector.begin() + index.integer().value(), lvalue);
 	}
 
 
-	Var List::remove(const Var &index) {
-		checkReaderIndex(index);
-		Var soldier(std::move(m_vector[index.to_int64()]));
-		m_vector.erase(m_vector.begin() + index.to_int64());
+	auto List::remove(const Var &index) {
+        checkReadIndex(index);
+		Var soldier(std::move(m_vector[index.integer().value()]));
+		m_vector.erase(m_vector.begin() + index.integer().value());
 		return soldier;
 	}
 
@@ -161,11 +155,11 @@ namespace Calamity {
 
 
 
-	void List::checkReaderIndex(const Var & index) const {
+	void List::checkReadIndex(const Var & index) const {
 		if (!index.isNumber()){
 			throw nonNumericListSubscriptException(index);
 
-		} else if (index.to_int64() >= size()){
+		} else if (index.integer() >= size()){
 			throw indexOutOfBoundsException(index.number());
 
 		} else if (index.isNegative()) {
@@ -173,11 +167,11 @@ namespace Calamity {
 		}
 	}
 
-	void List::checkInserterIndex(const Var &index) const {
+	void List::checkInsertIndex(const Var & index) const {
 		if (!index.isNumber()){
 			throw nonNumericListSubscriptException(index);
 
-		} else if (index.to_int64() > size()){
+		} else if (index.integer() > size()){
 			throw indexOutOfBoundsException(index.number());
 
 		} else if (index.isNegative()) {
@@ -188,61 +182,61 @@ namespace Calamity {
 
 
 
-	Exception List::indexOutOfBoundsException(const Double & index) const {
-        CaDebug_noimpl();
-//		String errorString("list index is out of bounds [list.size=");
-//		errorString << m_vector.size();
-//		errorString += ",index=";
-//		errorString << index.to_int64();
-//		errorString += ']';
-//		return MessageException(std::move(errorString.string()));
+	Exception List::indexOutOfBoundsException(const Number & index) const {
+		String errorString;
+		errorString.push_back(
+            ca("list index is out of bounds [list.size = "), m_vector.size(),
+            ca(", index = "), cast<Integer>(index).value(), ']'
+        );
+		return Exception(errorString.rval());
 	}
 
 	Exception List::nonNumericListSubscriptException(const Var &subscript) const {
-        CaDebug_noimpl();
-//		String errorString("list index subscript is of non-number type [subscript.typename=");
-//		errorString += subscript.typeName();
-//		errorString += ']';
-//		return MessageException(std::move(errorString.string()));
+		String errorString;
+		errorString.push_back(
+		    ca("list index subscript is of non-number type [typeof(subscript) = "),
+		    subscript.typeName(), ca(']')
+        );
+		return Exception(errorString.rval());
 	}
 
-	Exception List::negativeIndexException(const Double &index) const {
-        CaDebug_noimpl();
-//		String errorString("list index subscript is negative [subscript=");
-//		errorString << index.to_int64();
-//		errorString += ']';
-//		return MessageException(std::move(errorString.string()));
+	Exception List::negativeIndexException(const Number &index) const {
+		String errorString;
+		errorString.push_back(
+		    ca("list index subscript is negative [index = "),
+		    cast<Integer>(index).value(), ca(']')
+        );
+		return Exception(errorString.rval());
 	}
 
 	Exception List::sublistInvalidRangeTypeException(const Var &begin, const Var &end) {
-	    CaDebug_noimpl();
-//		String errorString("sublist range non-number argument type [begin.typename=");
-//		errorString += begin.typeName();
-//		errorString += ", end.typename=";
-//		errorString += end.typeName();
-//		errorString += ']';
-//		return MessageException(std::move(errorString.string()));
+		String errorString;
+		errorString.push_back(
+		    ca("sublist range non-number argument type [typeof(begin) = "), begin.typeName(),
+    		ca(", typeof(end) = "), end.typeName(), ca(']')
+        );
+		return Exception(errorString.rval());
 	}
 
 	Exception List::sublistRidiculousRangeExcetion(const Var &begin, const Var &end) {
-		String errorString(ca("sublist range is ridiculous [begin="));
-		errorString += begin.typeName();
-		errorString += ", end=";
-		errorString += end.typeName();
-		errorString += ']';
-		return Exception(std::move(errorString));
+		String errorString;
+		errorString.push_back(
+		    ca("sublist range is ridiculous [begin = "), begin.typeName(),
+		    ca(", end = "), end.typeName(), ca(']')
+        );
+		return Exception(errorString.rval());
 	}
 
 	List List::sublist(const Var &begin, const Var &end) &{
-		checkReaderIndex(begin);
-		checkReaderIndex(end);
-		if (begin.to_int64() > end.to_int64()){
+        checkReadIndex(begin);
+        checkReadIndex(end);
+		if (begin.integer() > end.integer()){
 			throw sublistRidiculousRangeExcetion(begin, end);
 		} else {
 			List sub;
-			auto i(m_vector.begin()  + begin.to_int64());
-			auto edge(m_vector.end() + end.to_int64());
-			sub.m_vector.reserve(static_cast<size_t>(edge - i));
+			auto i(m_vector.begin()  + begin.integer());
+			auto edge(m_vector.end() + end.integer());
+			sub.reserve(static_cast<size_type>(edge - i));
 			while (i != edge){
 				sub.push_back(*i);
 				++i;
@@ -252,27 +246,30 @@ namespace Calamity {
 	}
 
 	List List::sublist(const Var &begin, const Var &end) &&{
-		checkReaderIndex(begin);
-		checkReaderIndex(end);
-		if (begin.to_int64() > end.to_int64()){
+        checkReadIndex(begin);
+        checkReadIndex(end);
+        Integer beginInt(begin.integer());
+        Integer endInt(end.integer());
+		if (beginInt > endInt){
 			throw sublistRidiculousRangeExcetion(begin, end);
 		} else {
 			List sub;
-			auto i(m_vector.begin()  + begin.to_int64());
-			auto edge(m_vector.end() + end.to_int64());
+			auto i(m_vector.begin()  + beginInt);
+			auto edge(m_vector.end() + endInt);
 			sub.m_vector.reserve(static_cast<size_t>(edge - i));
 			while (i != edge){
-				sub.emplace_back(std::move(*i));
+				sub.emplace_back(i->rval());
 				++i;
 			}
 			return sub;
 		}
 	}
 
-	std::wostream & operator<<(std::wostream &stream, const List &self) {
-		std_ext::print(self, stream);
+	ostream & operator<<(ostream &stream, const List &self) {
+		Vtem::print(self, stream);
         return stream;
 	}
+
 }
 
 

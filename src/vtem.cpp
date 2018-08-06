@@ -1,8 +1,8 @@
-#include "std_ext.h"
+#include "vtem.h"
 #include <cmath>
 
 
-namespace std_ext {
+namespace Vtem {
     const char * toString(bool boolean){
 		return boolean ? "true" : "false";
 	}
@@ -13,8 +13,7 @@ namespace std_ext {
 					: (left < right) ? -1 : 1;
 	}
 
-	bool doubleEquals(const double & left, const double & right, const double & epsilon){
+	bool doubleEquals(const double & left, const double & right, const double & epsilon) {
 		return fabs(left - right) < epsilon;
 	}
-
 }

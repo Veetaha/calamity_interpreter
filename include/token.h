@@ -1,5 +1,6 @@
 #pragma once
 
+#include "defs.h"
 #include <boost/range.hpp>
 #include <lexertl/match_results.hpp>
 #include <lexertl/rules.hpp>
@@ -8,7 +9,7 @@
 #include "var_string.h"
 #include "var_substring.h"
 
-namespace Calamity {
+namespace Cala {
 	class Token {
 	public:
         enum class Type {
@@ -29,7 +30,7 @@ namespace Calamity {
             Delete,
             Throw,
             Import,
-            Finally,
+            Export,
             Typeof,
             Yield,
             Var,
@@ -46,12 +47,18 @@ namespace Calamity {
             Null,
             While,
             Return,
+            Async,
+            Await,
+            Of,
             Endl,
+            Infinity,
+            NaN,
+			Instanceof,
             Identity,
             NotIdentity,
             Increment,
             Decrement,
-            And,
+            LogAnd,
             Assign,
             PlusAssign,
             MinusAssign,
@@ -84,10 +91,10 @@ namespace Calamity {
             LessOrEqual,
             LessThan,
             Minus,
-            Multiplication,
-            Neq,
-            Not,
-            Or,
+            Asterisk, // Multiplication or generator fucntion
+            NotEquality,
+            LogNot,
+            LogOr,
             Plus,
             Power,
             Ellipsis,
@@ -98,6 +105,7 @@ namespace Calamity {
             Semicolon,
             Arrow,
             Dot,
+            QuestionMark,
             Identifier,
             String,
             Number,
@@ -106,9 +114,9 @@ namespace Calamity {
             SLComment  = lexertl::rules::skip(),
             Whitespace = lexertl::rules::skip(),
             M_FirstKetword = static_cast<int>(Type::Enum),
-            M_LastKeyword  = static_cast<int>(Type::Endl),
+            M_LastKeyword  = static_cast<int>(Type::Instanceof),
             M_FirstPunct   = static_cast<int>(Type::Identity),
-            M_LastPunct    = static_cast<int>(Type::Dot)
+            M_LastPunct    = static_cast<int>(Type::QuestionMark)
         };
     private:
 		Type m_type;
@@ -158,7 +166,7 @@ namespace Calamity {
         static lexertl::basic_rules<cachar_t, cachar_t> makeLexertlRules();
 
 
-        inline bool hasType(const Type & type) const { return m_type == type; }
+        inline bool is(const Type & type) const { return m_type == type; }
     };
 
 

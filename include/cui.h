@@ -10,6 +10,9 @@
 
 namespace Cui {
 
+    template <typename TDist>
+    using Point2D = Vtem::Point2D<TDist>;
+
     class Foreground { // manipulator
     private:
         unsigned char m_red;

@@ -1,5 +1,4 @@
-#ifndef STD_EXT
-#define STD_EXT
+#pragma once
 
 #include <iterator>
 #include <set>
@@ -12,58 +11,25 @@
 
 #include "error.h"
 #include "message_exception.h"
+// Moved macroes to meta.h, including it for mainaining legacy code.
+#include "meta.h"
 
-#define DECL_UNCOPIABLE(Type)				\
-	Type(const Type &) = delete;			\
-	Type & operator=(const Type &) = delete;
+#define raii(CLEANUP...)                                                                     \
+    if constexpr (const auto & ____lamda__([&](){CLEANUP;}); true)                           \
+    if constexpr (const ::Vtem::Raii<decltype(____lamda__)> ____raii__(____lamda__); true)
 
-#define DECL_UNMOVABLE(Type)			\
-	Type(Type &&) = delete;				\
-	Type & operator=(Type &&) = delete;
-
-#define DECL_NO_COPY_AND_MOVE(Type) DECL_UNCOPIABLE(Type) DECL_UNMOVABLE(Type)
+#define local_raii(CLEANUP...)                                                 \
+    const auto & ____local_lamda__([&](){CLEANUP;});                           \
+    const ::Vtem::Raii<decltype(____local_lamda__)> ____local_raii__(____local_lamda__);
 
 
-#define DECL_DEFAULT_COPYING(Type)				\
-	Type(const Type &) = default;				\
-	Type & operator=(const Type &) = default;	\
-
-#define DECL_DEFAULT_MOVING(Type)			\
-	Type(Type && ) = default;				\
-	Type & operator=(Type &&) = default;	\
-
-#define DECL_DEFAULT_COPY_AND_MOVE(Type) DECL_DEFAULT_MOVING(Type) DECL_DEFAULT_COPYING(Type)
-
-#define DECL_DEFAULT_MOVE_ONLY(Type) DECL_DEFAULT_MOVING(Type) DECL_UNCOPIABLE(Type)
-
-#define DEPRECATED __attribute((deprecated))
-#define DEPRECATED_WHY(why) __attribute((deprecated(why)))
-
-#define SIZEAT(arr) (sizeof((arr)) / sizeof((arr)[0]))
-#define SKIP_IF(condition) {if ((condition)) {continue;}}
-#define RETURN_IF(CONDITION, OPTIONAL_RETURN_VALUE...) \
-	if ((CONDITION)) { return OPTIONAL_RETURN_VALUE; }
-
-#define foreach_iter(it_id, container) \
-	if(const auto & ____cont##it_id = container; true)\
-	for(auto it_id(____cont##it_id.begin()); it_id != ____cont##it_id.end(); ++it_id)
-
-#define foreach_citer(it_id, container)\
-	if (const auto & ____cont##it_id = container; true)\
-	for(auto it_id(____cont##it_id.cbegin()); it_id != ____cont##it_id.cend(); ++it_id)
-
-#define foreach_riter(it_id, container) \
-	if(const auto & ____cont##it_id = container; true)\
-	for(auto it_id(____cont##it_id.rbegin()); it_id != ____cont##it_id.rend(); ++it_id)
-
-#define foreach_criter(it_id, container)\
-	if (const auto & ____cont##it_id = container; true)\
-	for(auto it_id(____cont##it_id.crbegin()); it_id != ____cont##it_id.crend(); ++it_id)
-
-namespace std_ext {
+// Stands for 'Vitaha templates'
+namespace Vtem {
     constexpr const char * const SPACED_ID_REGEX = R"~~(^\s*(?:\w\s?)+$)~~";
     constexpr const char * const IPV4_ADDRESS_REGEX = R"~~(^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$)~~";
 
+    template <typename TChar, char ... characters>
+    inline constexpr const TChar strlit[] = { static_cast<TChar>(characters)... , static_cast<TChar>(0) };
 
     template<typename... T>
     struct are_integral : public std::__and_<std::is_integral<T>...> {
@@ -99,29 +65,29 @@ namespace std_ext {
             || (std::is_unsigned_v<TLeft> && std::is_unsigned_v<TRight>),
             bool
     >
-    isLess(const TLeft & left, const TRight & right) {
+    isLess(const TLeft & left, const TRight & right) noexcept {
         return left < right;
-    };
+    }
 
     template<typename TLeft, typename TRight>
     inline std::enable_if_t<
             std::is_unsigned_v<TLeft> && std::is_signed_v<TRight>,
             bool
     >
-    isLess(const TLeft & left, const TRight & right) {
+    isLess(const TLeft & left, const TRight & right) noexcept {
         return right > 0
                && left < static_cast<std::make_unsigned_t<TRight>>(right);
-    };
+    }
 
     template<typename TLeft, typename TRight>
     inline std::enable_if_t<
             std::is_signed_v<TLeft> && std::is_unsigned_v<TRight>,
             bool
     >
-    isLess(const TLeft & left, const TRight & right) {
+    isLess(const TLeft & left, const TRight & right) noexcept {
         return left < 0
                || static_cast<std::make_unsigned_t<TLeft>>(left) < right;
-    };
+    }
 
 
     template<typename TLeft, typename TRight>
@@ -133,9 +99,9 @@ namespace std_ext {
             || (std::is_unsigned_v<TLeft> && std::is_unsigned_v<TRight>),
             bool
     >
-    isGreater(const TLeft & left, const TRight & right) {
+    isGreater(const TLeft & left, const TRight & right) noexcept {
         return left > right;
-    };
+    }
 
     template<typename TLeft, typename TRight>
     inline std::enable_if_t<
@@ -144,30 +110,30 @@ namespace std_ext {
             && std::is_signed_v<TRight>,
             bool
     >
-    isGreater(const TLeft & left, const TRight & right) {
+    isGreater(const TLeft & left, const TRight & right) noexcept {
         return right < 0
                || left > static_cast<std::make_unsigned_t<TRight>>(right);
-    };
+    }
 
     template<typename TLeft, typename TRight>
     std::enable_if_t<
             std::is_signed_v<TLeft> && std::is_unsigned_v<TRight>,
             bool
     >
-    isGreater(const TLeft & left, const TRight & right) {
+    isGreater(const TLeft & left, const TRight & right) noexcept {
         return left > 0
                && static_cast<std::make_unsigned_t<TLeft>>(left) > right;
-    };
+    }
 
     template<typename TLeft, typename TRight>
-    bool isGeq(const TLeft & left, const TRight & right) {
+    bool isGeq(const TLeft & left, const TRight & right) noexcept {
         return !isLess(left, right);
-    };
+    }
 
     template<typename TLeft, typename TRight>
-    bool isLeq(const TLeft & left, const TRight & right) {
+    bool isLeq(const TLeft & left, const TRight & right) noexcept {
         return !isGreater(left, right);
-    };
+    }
 
 
     template<typename TLeft, typename TRight>
@@ -176,12 +142,12 @@ namespace std_ext {
             || std::is_floating_point_v<TRight>,
             bool
     >
-    isEqual(const TLeft & left, const TRight & right) {
+    isEqual(const TLeft & left, const TRight & right) noexcept {
         return std::abs(left - right) < std::max(
                 std::numeric_limits<TLeft>::epsilon(),
                 std::numeric_limits<TRight>::epsilon()
         );
-    };
+    }
 
 
     template<typename TLeft, typename TRight>
@@ -195,34 +161,34 @@ namespace std_ext {
             ),
 			bool
 	>
-	isEqual(const TLeft & left, const TRight & right){
+	isEqual(const TLeft & left, const TRight & right) noexcept {
 		return left == right;
-	};
+	}
 
 	template <typename TLeft, typename TRight>
 	inline std::enable_if_t<
 			std::is_unsigned_v<TLeft> && std::is_signed_v<TRight>,
 			bool
 	>
-	isEqual(const TLeft & left, const TRight & right){
+	isEqual(const TLeft & left, const TRight & right) noexcept {
 		return right >= 0
 			   && left == static_cast<std::make_unsigned_t<TRight>>(right);
-	};
+	}
 
 	template <typename TLeft, typename TRight>
 	std::enable_if_t<
 			std::is_signed_v<TLeft> && std::is_unsigned_v<TRight>,
 			bool
 	>
-	isEqual(const TLeft & left, const TRight & right){
+	isEqual(const TLeft & left, const TRight & right) noexcept {
 		return left >= 0
 			   && static_cast<std::make_unsigned_t<TLeft>>(left) == right;
-	};
+	}
 
 	template<typename TLeft, typename TRight>
-	bool isNotEqual(const TLeft & left, const TRight & right){
+	bool isNotEqual(const TLeft & left, const TRight & right) noexcept {
 		return !isEqual(left, right);
-	};
+	}
 
 	template <typename TIter>
 	void deletePtrs(TIter begin, const TIter & end);
@@ -317,6 +283,9 @@ namespace std_ext {
 	template <typename TContainer, typename TString, typename PushBacker>
 	TString & appendContainerToString(TString & string, const TContainer & container, const PushBacker & appender);
 
+	template <typename TContainer, typename TString>
+	TString & appendContainerToString(TString & string, const TContainer & container);
+
 
 	template <typename TNumeric, typename TString>
     std::enable_if_t<is_numeric_v<TNumeric>, TString &>
@@ -330,7 +299,8 @@ namespace std_ext {
     -> std::enable_if_t<is_numeric_v<TNumeric>, TString &>;
 
 	template <typename TString, typename TChar>
-	TString & prependToString(TString & string, const TChar * const & cString);
+    std::enable_if_t<std::is_same_v<TChar, typename TString::value_type>,
+    TString &> prependToString(TString & string, const TChar * const & cString);
 
 	template <typename TString>
 	TString & prependToString(TString & string, const TString & prependString);
@@ -345,6 +315,48 @@ namespace std_ext {
 
 	template <typename TTemplate, typename... TSuspects>
 	bool equalsOneOf(const TTemplate & templ, const TSuspects &... suspects);
+
+	constexpr double nan() noexcept {
+		return std::numeric_limits<double>::quiet_NaN();
+	}
+
+	constexpr double infinity() noexcept {
+		return std::numeric_limits<double>::infinity();
+	}
+
+	template <typename TFunct>
+	class Raii {
+        const TFunct & m_onEscape;
+	public:
+	    explicit Raii(const TFunct & onBlockEscape) : m_onEscape(onBlockEscape) {}
+	    ~Raii() { m_onEscape(); }
+	};
+
+	template <typename TChar>
+	class IsWhitespace {
+		std::locale m_globalLocale;
+	public:
+		inline bool operator()(const TChar & suspect) const {
+			return std::isspace(suspect, m_globalLocale);
+		}
+	};
+
+	template <typename TPredicate>
+	class NegatedPredicate {
+	    const TPredicate & m_predicate;
+	public:
+	    NegatedPredicate(const TPredicate & predicate) : m_predicate(predicate) {}
+	    template <typename... TN>
+	    inline bool operator()(TN &&... a) const {
+            return !m_predicate(std::forward<TN>(a)...);
+	    }
+
+	};
+
+	template <typename TChar>
+	size_t cstrlen(const TChar * const & cString);
+
+
 
 // -------------------------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------------------------
@@ -362,7 +374,6 @@ namespace std_ext {
 	template <typename TIter>
 	void deletePtrs(TIter begin, const TIter & end){
 		while (begin != end){
-			Debug_exists(*begin);
 			delete *begin;
 			++begin;
 		}
@@ -371,7 +382,6 @@ namespace std_ext {
 	template <typename TContainer>
 	void deletePtrs(TContainer & cont){
 		for (auto & ptr : cont){
-			Debug_exists(ptr);
 			delete ptr;
 		}
 	}
@@ -383,7 +393,6 @@ namespace std_ext {
 		while (begin != end){
 			auto occurence = set.find(*begin);
 			if (occurence == set.end()){
-				Debug_exists(begin);
 				delete *begin;
 				set.insert(*begin);
 			} // else already deleted
@@ -643,11 +652,22 @@ namespace std_ext {
 			}
 			return string += static_cast<char_type>(']');
 		}
-	};
+	}
+
+
+	template<typename TContainer, typename TString>
+	TString & appendContainerToString(TString & string, const TContainer & container) {
+		return appendContainerToString(string, container,
+			[](TString & string, const auto & item){
+				string += item;
+			}
+		);
+	}
+
 
 	template <typename TNumeric, typename TString>
-    std::enable_if_t<is_numeric_v<TNumeric>, TString &>
-    appendNumberToString(TString & string, const TNumeric & number){
+    std::enable_if_t<is_numeric_v<TNumeric>,
+    TString &> appendNumberToString(TString & string, const TNumeric & number){
 		return string += ::boost::lexical_cast<TString>(number);
 	}
 
@@ -675,8 +695,9 @@ namespace std_ext {
     }
 
 
-	template<typename TString, typename TChar>
-	TString & prependToString(TString &string, const TChar * const &cString) {
+    template <typename TString, typename TChar>
+    std::enable_if_t<std::is_same_v<TChar, typename TString::value_type>,
+    TString & >prependToString(TString & string, const TChar * const & cString){
 		string.insert(0, cString);
 		return string;
 	}
@@ -717,16 +738,19 @@ namespace std_ext {
             const TSuspect1 & suspect1,
             const TSuspectN &... suspects){
 	    return isEqual(templ, suspect1) || equalsOneOf_helper(templ, suspects...);
-	};
+	}
 
     template<typename TTemplate, typename... TSuspects>
     bool equalsOneOf(const TTemplate & templ, const TSuspects & ... suspects) {
         return equalsOneOf_helper(templ, suspects...);
     }
 
+    template <typename TChar>
+    size_t cstrlen(const TChar * const & cString) {
+        return std::char_traits<TChar>::length(cString);
+    }
+
+
 
 }
 
-
-
-#endif // STD_EXT

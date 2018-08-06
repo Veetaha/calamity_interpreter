@@ -2,36 +2,24 @@
 #include <fstream>
 #include "lexertl/generator.hpp"
 #include <iostream>
-#include <cui.h>
 #include "lexertl/lookup.hpp"
 #include "lexer.h"
+#include "defs.h"
 #include "var_substring.h"
+#include "cui.h"
 
 #include "var_list.h"
 int main () {
-    using Calamity::conout;
-    using Calamity::endline;
-    using Calamity::String;
-    using Calamity::Lexer;
-    using Calamity::Exception;
-    std::locale::global(std::locale(""));
-    String code;
+    using namespace Cala;
+    // default locale is before main function in defs.h header
     try {
-        code = String::readFromFile("../main.js");
+        conout << Lexer::splitTokensFromFile("../main.js");
     } catch (const Exception & exception){
         conout << ca("SIGSEGV: ") << exception.what();
         return EXIT_FAILURE;
     }
-    Lexer lexer;
-    String errorStr(lexer.splitTokens(&code));
-    conout << Cui::reverse
-               << Cui::bold
-               << ca("Lexical analysis finished with code:")
-               << Cui::reset
-               << endline
-               << errorStr
-               << endline
-               << ca("Parsed tokens:\n")
-               << lexer;
+
+
+
     return EXIT_SUCCESS;
 }

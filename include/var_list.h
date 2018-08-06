@@ -7,24 +7,24 @@
 
 #include <vector>
 #include <iostream>
-#include "message_exception.h"
+#include "defs.h"
 #include "var_boolean.h"
-#include "var_double.h"
-#include "var.h"
+#include "var_number.h"
+#include "native_exception.h"
 
-namespace Calamity {
+namespace Cala {
 
 	class List {
-		std::vector<Var> m_vector;
+		list_base m_vector;
 	public:
-
-		typedef std::vector<Var>::iterator iterator;
-		typedef std::vector<Var>::const_iterator const_iterator;
-		typedef std::vector<Var>::value_type value_type;
-		typedef std::vector<Var>::reference reference;
-		typedef std::vector<Var>::const_reference const_reference;
-		typedef std::vector<Var>::reverse_iterator reverse_iterator;
-		typedef std::vector<Var>::const_reverse_iterator const_reverse_iterator;
+        using size_type              = list_base::size_type;
+		using iterator               = list_base::iterator;
+		using const_iterator         = list_base::const_iterator;
+		using value_type             = list_base::value_type;
+		using reference              = list_base::reference;
+		using const_reference        = list_base::const_reference;
+		using reverse_iterator       = list_base::reverse_iterator;
+		using const_reverse_iterator = list_base::const_reverse_iterator;
 
 
 		inline iterator begin()                 { return m_vector.begin();   }
@@ -46,13 +46,14 @@ namespace Calamity {
 		inline const_reverse_iterator crend()   const { return m_vector.crend();   }
 
 		int64_t size() const;
+		inline bool isEmpty() const { return m_vector.empty(); }
 
 		List() = default;
 		List(const List & lvalue);
-		List(List && rvalue);
+		List(List && rvalue) noexcept;
 
 		List & operator=(const List & lvalue);
-		List & operator=(List && rvalue);
+		List & operator=(List && rvalue) noexcept;
 
 		List & operator+=(const Var & lvalue);
 		List & operator+=(Var && rvalue);
@@ -62,6 +63,11 @@ namespace Calamity {
 		friend List operator+(List &&      leftRval,  const List & rightLval);
 		friend List operator+(const List & leftLval,       List && rightRval);
 
+        inline void reserve(const size_type & reservationSize)
+        { m_vector.reserve(reservationSize); }
+
+        inline void reserveMore(const size_type & more)
+        { m_vector.reserve(m_vector.size() + more); }
 
 		List & push_back(const List & lvalue);
 		List & emplace_back(List &&rvalue);
@@ -76,30 +82,32 @@ namespace Calamity {
 		List & emplace_front(Var && rvalue);
 
 		explicit operator bool() const;
-		bool to_bool() const;
-		Boolean toBoolean() const;
 
 		Var & operator[](const Var & index) &;
 		Var && operator[](const Var & index) &&;
+		inline Var & front()             { return m_vector.front(); }
+		inline const Var & front() const { return m_vector.front(); }
+        inline Var & back()              { return m_vector.back();  }
+        inline const Var & back() const  { return m_vector.back();  }
 
 		void insert(const Var & index, Var && rvalue);
 		void insert(const Var & index, const Var & lvalue);
-		Var remove(const Var & index);
+		auto remove(const Var & index);
 
 		List sublist(const Var & begin, const Var & end) &;
 		List sublist(const Var & begin, const Var & end) &&;
 
-		friend std::wostream & operator<<(std::wostream & stream, const List & self);
+		friend ostream & operator<<(ostream & stream, const List & self);
 
-		void print(std::wostream & stream = std::wcout)
+		void print(ostream & stream = conout)
 		{ stream << *this; }
 
 
 	private:
-		void checkReaderIndex(const Var & index) const; // throws MessageException
-		void checkInserterIndex(const Var & index) const; // throws MessageException
-		Exception negativeIndexException(const Double & index) const;
-		Exception indexOutOfBoundsException(const Double & index) const;
+		void checkReadIndex(const Var & index) const; // throws MessageException
+		void checkInsertIndex(const Var & index) const; // throws MessageException
+		Exception negativeIndexException(const Number & index) const;
+		Exception indexOutOfBoundsException(const Number & index) const;
 		Exception nonNumericListSubscriptException(const Var &subscript) const;
 		Exception sublistInvalidRangeTypeException(const Var &begin, const Var &end);
 		Exception sublistRidiculousRangeExcetion(const Var &begin, const Var &end);

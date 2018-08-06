@@ -1,70 +1,86 @@
 #include <iostream>
-#include <lexer.h>
-#include <error.h>
-#include <token.h>
-#include <cui.h>
 #include <lexertl/match_results.hpp>
 #include <boost/range.hpp>
+
+#include "lexer.h"
+#include "token.h"
+#include "cui.h"
 #include "lexertl_gen.h"
+#include "native_exception.h"
 
-namespace Calamity {
+namespace Cala {
 
-    String Lexer::unexpectedTokenException(String::const_iterator & tokenIt){
+    Exception LexicalInfo::unexpectedTokenException(String::const_iterator & tokenIt){
         Point2D<size_t> mistakePoint(m_code->point2DOf(tokenIt));
-        return String().push_back(
-            ca("unexpected token ["), *tokenIt , ca("] at ("), mistakePoint.y,
-                                                    ca(" : "), mistakePoint.x, ca(")\n"),
-            mistakePoint.y, ca(". ["), m_code->lineOf(tokenIt), ca(']')
+        String exceptionString;
+        return Exception(
+            std::move(
+                exceptionString.push_back(
+                    ca("unexpected token ["), *tokenIt,
+                    ca("] at ("), mistakePoint.y, ca(" : "), mistakePoint.x, ca(")\n"),
+                    mistakePoint.y, ca(". ["), m_code->lineOf(tokenIt), ca(']')
+                )
+            )
         );
     }
 
-    String Lexer::splitTokens(const String * const & code) {
-        namespace ltl = lexertl;
-        using Cui::newline;
-        if (!code){
-            return ca("code == nullptr");
-        }
-        m_code = code;
-        m_tokens.clear();
-        ltl::match_results<String::const_iterator> match(code->begin(), code->end());
+    namespace Lexer {
+        LexicalInfo splitTokens(const String & code) {
+            LexicalInfo info(code);
+            namespace ltl = lexertl;
+            typedef ltl::match_results<String::const_iterator> ltl_match_results;
 
-        for (ltlgen::lookup(match); match.id; ltlgen::lookup(match)) {
-            if (match.id == ltl::u16smatch::npos()){
-                return unexpectedTokenException(match.first);
-            }
+            ltl_match_results match(info.code()->cbegin(), info.code()->cend());
 
-            if (std_ext::equalsOneOf(match.id,
-                static_cast<decltype(match.id)>(Token::Type::Newline),
-                static_cast<decltype(match.id)>(Token::Type::MLComment))) {
-                // todo or not todo: ignoring newlines and multiline comments
-            } else if (match.id == static_cast<decltype(match.id)>(Token::Type::String)){
-                // flatten the string to omit leading and trailing quotes or apostrophes
-                m_tokens.emplace_back(
-                    Token::Type::String,
-                    match.first + 1,
-                    match.second - 1
-                );
-            } else {
-                m_tokens.emplace_back(
-                    static_cast<Token::Type>(match.id),
-                    match.first,
-                    match.second
-                );
+            for (ltlgen::lookup(match); match.id; ltlgen::lookup(match)) {
+                // No such token was found
+                if (match.id == ltl_match_results::npos()) {
+                    throw info.unexpectedTokenException(match.first);
+                }
+
+                typedef decltype(match.id) ltl_id_type;
+                typedef Token::Type Type;
+
+                if (Vtem::equalsOneOf(
+                    match.id,
+                    static_cast<ltl_id_type>(Type::Newline),
+                    static_cast<ltl_id_type>(Type::MLComment))) {
+                    // todo or not todo: ignoring newlines and multiline comments
+                } else if (match.id == static_cast<ltl_id_type>(Type::String)) {
+                    // flatten the string to omit leading and trailing quotes or apostrophes
+                    info.tokens().emplace_back(
+                        Type::String,
+                        match.first + 1,
+                        match.second - 1
+                    );
+                } else {
+                    info.tokens().emplace_back(
+                        static_cast<Token::Type>(match.id),
+                        match.first,
+                        match.second
+                    );
+                }
             }
+            return info;
         }
-        return ca("");
+
+        LexicalInfo splitTokensFromFile(const char * const & filePath){
+            return splitTokens(String::readFromFile(filePath));
+        }
     }
 
-    ostream & operator<<(ostream & stream, const Lexer & self) {
+    ostream & operator<<(ostream & stream, const LexicalInfo & self) {
         typedef Token::Type Type;
-        for (const Token & token : self.tokens()){
+        for (const Token & token : self.tokens()) {
             stream << token
-                   << ((token.hasType(Type::Semicolon)
-                     || token.hasType(Type::RightCurly))
-                       ? L'\n'
-                       : L' '
+                   << ((token.is(Type::Semicolon) || token.is(Type::RightCurly))
+                       ? ca('\n')
+                       : ca(' ')
                    );
         }
         return stream;
     }
+
+
+
 }

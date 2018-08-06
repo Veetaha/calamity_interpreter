@@ -1,13 +1,13 @@
 Calamity
 ┣━define
 ┃ ┣━ID SDELAY_DKR_ZA_MENE_PLEASE
-┃ ┃ ┗━Arglist
+┃ ┃ ┗━Paramlist
 ┃ ┃   ┗━ID numbers
 ┃ ┗━Block
 ┃   ┣━case
 ┃   ┃ ┣━!=
 ┃   ┃ ┃ ┣━ID typeof
-┃   ┃ ┃ ┃ ┗━Arglist
+┃   ┃ ┃ ┃ ┗━Paramlist
 ┃   ┃ ┃ ┃   ┗━ID numbers
 ┃   ┃ ┃ ┗━LL, "array"
 ┃   ┃ ┗━return
@@ -25,7 +25,7 @@ Calamity
 ┃   ┃ ┣━<
 ┃   ┃ ┃ ┣━ID i
 ┃   ┃ ┃ ┗━ID sizeof
-┃   ┃ ┃   ┗━Arglist
+┃   ┃ ┃   ┗━Paramlist
 ┃   ┃ ┃     ┗━ID numbers
 ┃   ┃ ┗━Block
 ┃   ┃   ┣━=
@@ -78,12 +78,12 @@ Calamity
 ┃   ┃   ┃ ┣━LL, false
 ┃   ┃   ┃ ┗━return
 ┃   ┃   ┃   ┗━ID unknownFunction
-┃   ┃   ┃     ┗━Arglist
+┃   ┃   ┃     ┗━Paramlist
 ┃   ┃   ┃       ┗━ID undeclaredIdentifer
 ┃   ┃   ┗━case
 ┃   ┃     ┣━LL, false
 ┃   ┃     ┗━ID escape
-┃   ┃       ┗━Arglist
+┃   ┃       ┗━Paramlist
 ┃   ┃         ┗━LL, "Escape from all the functions at the stack"
 ┃   ┗━return
 ┃     ┗━++
@@ -110,20 +110,20 @@ Calamity
 ┣━Declare
 ┃ ┣━ID userInput
 ┃ ┗━ID read
-┃   ┗━Arglist
+┃   ┗━Paramlist
 ┣━Declare
 ┃ ┣━ID _array
 ┃ ┗━ID digify
-┃   ┗━Arglist
+┃   ┗━Paramlist
 ┃     ┗━ID userInput
 ┗━ID print
-  ┗━Arglist
+  ┗━Paramlist
     ┣━++
     ┃ ┣━ID sizeof
-    ┃ ┃ ┗━Arglist
+    ┃ ┃ ┗━Paramlist
     ┃ ┃   ┗━ID _array
     ┃ ┗━ID SDELAY_DKR_ZA_MENE_PLEASE
-    ┃   ┗━Arglist
+    ┃   ┗━Paramlist
     ┃     ┗━ID _array
     ┗━LL, '
 '

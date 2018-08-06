@@ -12,326 +12,350 @@
 #include <sstream>
 #include "point2d.h"
 #include "defs.h"
+#include "meta.h"
 
 
-namespace Calamity {
-    template<typename TChar>
-    class BasicSubstring;
+namespace Cala {
 
-    template<typename TChar>
-    class BasicString {
-        std::basic_string<TChar> m_string;
-
-        friend class BasicSubstring<TChar>;
+    class String {
+        string_base m_string;
+        friend class Substring;
 
     public:
-        using string_t = std::basic_string<TChar>;
+        using value_type   = cachar_t;
 
-        typedef typename string_t::traits_type traits_type;
-        typedef typename string_t::size_type size_type;
-        typedef typename string_t::iterator iterator;
-        typedef typename string_t::const_iterator const_iterator;
-        typedef typename string_t::reverse_iterator reverse_iterator;
-        typedef typename string_t::const_reverse_iterator const_reverse_iterator;
+        using wrapped_type = string_base;
+        using char_type    = value_type;
 
-        static inline const size_type & npos() {
-            return std::basic_string<TChar>::npos;
-        }
+        typedef typename string_base::traits_type                       traits_type;
+        typedef typename string_base::size_type                           size_type;
+        typedef typename string_base::iterator                             iterator;
+        typedef typename string_base::const_iterator                 const_iterator;
+        typedef typename string_base::reverse_iterator             reverse_iterator;
+        typedef typename string_base::const_reverse_iterator const_reverse_iterator;
 
-        inline iterator begin() { return m_string.begin(); }
+        static constexpr const size_type & npos = std::basic_string<cachar_t>::npos;
 
-        inline iterator end() { return m_string.end(); }
+        meta_inline String && rval() & { return static_cast<String &&>(*this); }
 
-        inline const_iterator begin() const { return m_string.begin(); }
+        meta_inline               iterator   begin()       { return m_string.begin();   }
+        meta_inline               iterator     end()       { return m_string.end();     }
+        meta_inline         const_iterator   begin() const { return m_string.begin();   }
+        meta_inline         const_iterator     end() const { return m_string.end();     }
+        meta_inline         const_iterator  cbegin() const { return m_string.cbegin();  }
+        meta_inline         const_iterator    cend() const { return m_string.cend();    }
+        meta_inline       reverse_iterator  rbegin()       { return m_string.rbegin();  }
+        meta_inline       reverse_iterator    rend()       { return m_string.rend();    }
+        meta_inline const_reverse_iterator  rbegin() const { return m_string.rbegin();  }
+        meta_inline const_reverse_iterator    rend() const { return m_string.rend();    }
+        meta_inline const_reverse_iterator crbegin() const { return m_string.crbegin(); }
+        meta_inline const_reverse_iterator   crend() const { return m_string.crend();   }
 
-        inline const_iterator end() const { return m_string.end(); }
+        meta_inline String & append(const cachar_t * const & cString, const size_type & size);
 
-        inline const_iterator cbegin() const { return m_string.cbegin(); }
-
-        inline const_iterator cend() const { return m_string.cend(); }
-
-        inline reverse_iterator rbegin() { return m_string.rbegin(); }
-
-        inline reverse_iterator rend() { return m_string.rend(); }
-
-        inline const_reverse_iterator rbegin() const { return m_string.rbegin(); }
-
-        inline const_reverse_iterator rend() const { return m_string.rend(); }
-
-        inline const_reverse_iterator crbegin() const { return m_string.crbegin(); }
-
-        inline const_reverse_iterator crend() const { return m_string.crend(); }
-
-        inline BasicString & append(const TChar * const & cString, const size_type & size) {
-            m_string.append(cString, size);
-            return *this;
-        }
+        meta_inline String & append(const size_type & amount, const cachar_t & token) &;
 
 
-        BasicString() = default;
+        String() = default;
 
-        BasicString(const TChar * const & cString) : m_string(cString) {}
+        String(const cachar_t * const & cString) : m_string(cString) {}
+        String(const cachar_t & character) : m_string(1, character) {}
 
-        BasicString(BasicString && rvalue)
+        String(String && rvalue)
             : m_string(std::move(rvalue.m_string)) {}
 
-        BasicString(const BasicString & lvalue)
+        String(const String & lvalue)
             : m_string(lvalue.m_string) {}
 
-        BasicString(const string_t & lstring)
+        String(const string_base & lstring)
             : m_string(lstring) {}
 
-        BasicString(string_t && rstring)
+        String(string_base && rstring)
             : m_string(std::move(rstring)) {}
 
+        String(const const_iterator & begin, const const_iterator & end)
+            : m_string(begin, end) {}
 
-        inline const string_t & string() const { return m_string; }
 
-        inline string_t & string() { return m_string; }
 
-        inline TChar * data() { return m_string.data(); }
+        String(const Var & var);
 
-        inline const TChar * data() const { return m_string.data(); }
 
-        inline bool empty() const { return m_string.empty(); }
+        inline const string_base & string() const { return m_string; }
+        inline       string_base & string()       { return m_string; }
 
-        inline size_type size() const { return m_string.size(); }
+        inline const cachar_t * c_str() const { return m_string.c_str(); }
+        inline const cachar_t *  data() const { return m_string.data();  }
+        inline       cachar_t *  data()       { return m_string.data();  }
 
+        inline     bool isEmpty() const { return m_string.empty();  }
+        inline     bool   empty() const { return m_string.empty();  }
+        inline size_type   size() const { return m_string.size();   }
         inline size_type length() const { return m_string.length(); }
 
         inline void reserve(const size_type & amount) { m_string.reserve(amount); }
-
         inline size_type capacity() const { return m_string.capacity(); }
 
-        inline const TChar * c_str() const { return m_string.c_str(); }
+        /**
+         * @param number    Number to convert to string
+         * @return String containing floating point number to it
+         * uses boost::lexical_cast<string_base>(number) inside.
+         * See its documentation for more details.
+         */
+        static inline String cast(const Number & number);
+        /**
+         * @param boolean   Boolean to write to string
+         * @return String "true" if boolean == true, otherwise "false"
+         */
+        static const String & cast(const Boolean & boolean);
 
+        /**
+         * @return String "undefined"
+         */
+        static const String & cast(const Undefined & undefined);
+        /**
+         * @return String "null"
+         */
+        static const String & cast(const Null & null);
+
+
+        /**
+         * @param lval  Lvalue list to write to string
+         * @return String with list written to it using format
+         *  "[item1, item2, item3, ..., itemN]"
+         *
+         *  Always creates whole new string.
+         */
+        static String cast(const List & lval);
+
+        /**
+         * @param lval  Lvalue list to write to string
+         * @return String with list written to it using format
+         *  "[item1, item2, item3, ..., itemN]"
+         *
+         *  If the first item in the list is a string, uses this string and returns it.
+         */
+        static String cast(List && rval);
+
+
+
+        /**
+         * @tparam TPredIsSpace == decltype(isspace)
+         * @param fromPos   initial position to search from
+         * @param isspace   Predicate bool (*)(const cachar_t & c) returns true if c is whitespace
+         * @return Iterator to the first non-space character in range [fromPos, size())
+         * If the string is empty or contains no whitespaces, returns value == end()
+         * If fromPos >= length(), undefined behaviour
+         *
+         * Whitespaces are defined by std::isspace(character, <global_locale>) by defautl
+         */
+        template <typename TPredIsSpace = ::Vtem::IsWhitespace<cachar_t> >
+        const_iterator  findNonSpace(
+            const size_type & fromPos = 0,
+            const TPredIsSpace & isspace = TPredIsSpace()
+        );
+
+        /**
+         * @brief Almost the same as findNonSpace(), but searches backwards.
+         * The other difference is in range check:
+         * if (fromPos >= length() || fromPos == npos) fromPos = length() - 1;
+         */
+        template <typename TPredIsSpace = ::Vtem::IsWhitespace<cachar_t> >
+        const_iterator  rfindNonSpace(
+            const size_type & fromPos = npos,
+            const TPredIsSpace & isspace = TPredIsSpace()
+        );
+
+
+        inline size_type  find(
+            const cachar_t & character,
+            const size_type & fromPos = 0
+        ) const;
 
         inline size_type rfind(
-            const TChar & character,
-            const size_type & position = std::basic_string<TChar>::npos
-        ) { return m_string.rfind(character, position); }
+            const cachar_t & character,
+            const size_type & position = npos
+        ) const;
 
-        inline void reserveMore(const size_type & amount) {
-            size_type reservation(size() + amount);
-            if (m_string.capacity() < reservation) {
-                m_string.reserve(reservation);
-            }
-        }
+        inline void reserveMore(size_type amount);
 
-        inline const TChar & at(const size_type & index) const & { return m_string.at(index); }
+        inline const cachar_t & at(const size_type & index) const &;
+        inline       cachar_t & at(const size_type & index) &      ;
+        inline       cachar_t   at(const size_type & index) &&     ;
 
-        inline TChar & at(const size_type & index) & { return m_string.at(index); }
-
-        inline TChar at(const size_type & index) const && { return m_string.at(index); }
-
-        inline const TChar & operator[](const size_type & index) const & { return m_string[index]; }
-
-        inline TChar & operator[](const size_type & index) & { return m_string[index]; }
-
-        inline TChar operator[](const size_type & index) const && { return m_string[index]; }
+        inline const cachar_t & operator[](const size_type & index) const &;
+        inline       cachar_t & operator[](const size_type & index) &      ;
+        inline       cachar_t   operator[](const size_type & index) &&     ;
 
 
-        friend std::basic_ostream<TChar> & operator<<(
-            std::basic_ostream<TChar> & stream, const BasicString & self)
+        inline friend ostream & operator<<(ostream & stream, const String & self)
         { return stream << self.m_string; }
 
+        inline void print(ostream & stream);
 
-        void print(std::basic_ostream<TChar> & stream = std::cout) { stream << *this; }
+        static String readFromFile(const char * const & path);
 
-        static BasicString readFromFile(const char * const & path);
-
-        inline bool operator==(const BasicString & other) const { return this == &other || m_string == other.m_string; }
-
-        inline bool operator==(const TChar * cString) const {
-            auto selfStr(c_str());
-            while (*cString && *selfStr) {
-                if (! std::char_traits<TChar>::eq(*cString ++, *selfStr ++))
-                    return false;
-            }
-            return *cString == *selfStr;
-        }
-
-        inline bool operator!=(const BasicString & other) const { return ! (*this == other); }
-
-        inline bool operator!=(const TChar * const & cString) const { return ! (*this == cString); }
-
-#define BasicString_defRelationalOperator(OPERATOR)            \
-        inline bool operator OPERATOR(const BasicString & other) const \
-        { return m_string OPERATOR other.m_string; }                   \
+        inline bool operator==(const String & other) const;
+        inline bool operator!=(const String & other) const;
+        inline bool operator>=(const String & other) const;
+        inline bool operator<=(const String & other) const;
+        inline bool operator >(const String & other) const;
+        inline bool operator <(const String & other) const;
 
 
-        BasicString_defRelationalOperator(<)
+        inline bool operator==(const cachar_t *         cString) const;
+        inline bool operator!=(const cachar_t * const & cString) const;
 
-        BasicString_defRelationalOperator(<=)
 
-        BasicString_defRelationalOperator(>=)
+        inline String & operator=(const String &   other);
+        inline String & operator=(      String &&  rvalue);
+        inline String & operator=(const string_base &   string);
+        inline String & operator=(      string_base &&  string);
+        inline String & operator=(const cachar_t * const & cString);
+        inline String & operator=(const cachar_t & character);
+        inline String & operator=(const std::initializer_list<cachar_t> & il);
 
-        BasicString_defRelationalOperator(>)
+        inline String & operator+=(const String & string);
+        inline String & operator+=(const string_base & string);
+        inline String & operator+=(const cachar_t * const & cString);
+        inline String & operator+=(const cachar_t & character);
+        inline String & operator+=(const std::initializer_list<cachar_t> & il);
+        inline String & operator+=(const Substring & substr);
 
-        inline BasicString & operator=(const BasicString & other) {
-            m_string = other.m_string;
-            return *this;
-        }
 
-        inline BasicString & operator=(BasicString && rvalue){
-            m_string = static_cast<string_t &&>(rvalue.m_string);
-            return *this;
-        }
+        String & operator+=(const char * cStr);
+        String & operator+=(const Var & var);
+        friend inline String & operator>>(const Var & var, String & string);
 
-        inline BasicString & operator=(const string_t & string) {
-            m_string = string;
-            return *this;
-        }
-
-        inline BasicString & operator=(string_t && string) {
-            m_string = std::move(string);
-            return *this;
-        }
-
-        inline BasicString & operator=(const TChar * const & cString) {
-            m_string = cString;
-            return *this;
-        }
-
-        inline BasicString & operator=(const TChar & character) {
-            m_string = character;
-            return *this;
-        }
-
-        inline BasicString & operator=(const std::initializer_list<TChar> & il) {
-            m_string = il;
-            return *this;
-        }
-
-        inline BasicString & operator+=(const BasicString & string) {
-            m_string += string.m_string;
-            return *this;
-        }
-
-        inline BasicString & operator+=(const string_t & string) {
-            m_string += string;
-            return *this;
-        }
-
-        inline BasicString & operator+=(const TChar * const & cString) {
-            m_string += cString;
-            return *this;
-        }
-
-        inline BasicString & operator+=(const TChar & character) {
-            m_string += character;
-            return *this;
-        }
-
-        inline BasicString & operator+=(const std::initializer_list<TChar> & il) {
-            m_string += il;
-            return *this;
-        }
-
-        friend inline string_t operator+=(string_t & basicString, const BasicString & self){
-            return basicString += self.m_string;
-        }
+        friend inline string_base operator+=(string_base & basicString, const String & self)
+        { return basicString += self.m_string; }
 
         template<typename... TN>
-        BasicString & push_back(const TN & ... items);
+        String & push_back(const TN & ...items);
 
-        inline BasicString & insert(const size_type & index,
-                                    const TChar * const & cString
+        inline String & insert(const size_type & index, const String & string);
+        inline String & insert(const size_type & index, const cachar_t * const & cString);
+        inline String & insert(
+            const size_type & index,
+            const cachar_t * const & cString,
+            const size_type & amount
         );
 
-        inline BasicString & insert(const size_type & index,
-                                    const TChar * const & cString,
-                                    const size_type & amount
-        );
-        inline BasicString & insert(const size_type & index, const BasicString & string);
 
         template<typename TNumeric>
         inline std::enable_if_t<
-            std_ext::is_numeric_v<TNumeric>
-            && ! std::is_same_v<TNumeric, TChar>,
-            BasicString &
-        >
-        operator<<(const TNumeric & entity) {
-            std_ext::appendNumberToString(m_string, entity);
-            return *this;
-        }
+            Vtem::is_numeric_v<TNumeric> && !std::is_same_v<TNumeric, cachar_t>,
+        String & > operator<<(const TNumeric & entity);
 
         template<typename T>
         inline std::enable_if_t<
-            ! std_ext::is_numeric_v<T>
-            || std::is_same_v<T, TChar>,
-        BasicString &> operator<<(const T & entity) { return *this += entity; }
+            !Vtem::is_numeric_v<T> || std::is_same_v<T, cachar_t>,
+        String &> operator<<(const T & entity);
 
 
         template<typename T>
-        inline friend BasicString & operator>>(const T & entity, BasicString & self) {
-            std_ext::prependToString(
+        inline friend String & operator>>(const T & entity, String & self) {
+            Vtem::prependToString(
                 self.m_string, entity
             );
             return self;
         }
 
-        inline friend BasicString & operator>>(const BasicString & prep, BasicString & self){
+        inline friend String & operator>>(const String & prep, String & self){
             return self.insert(0, prep);
         }
 
+        /**
+         * @brief   Removes all leading space characters from the string.
+         * @tparam TPredIsSpace predicate of form bool (*)(cachar_t c) to find out if c is space
+         *
+         * If string is empty or contains only whitespace characters, string becomes empty.
+         */
+        template <typename TPredIsSpace = IsWhitespace>
+        inline void trimBegin(const TPredIsSpace & isspace = TPredIsSpace());
+
+
+        /**
+         * @brief   Removes all trailing space characters from the string.
+         * @tparam TPredIsSpace predicate of form bool (*)(cachar_t c) to find out if c is space
+         *
+         * If string is empty or contains only whitespace characters, string becomes empty.
+         */
+        template <typename TPredIsSpace = IsWhitespace>
+        inline void trimEnd(const TPredIsSpace & isspace = TPredIsSpace());
+
+        /**
+         * @brief   Removes all leading and trailing space characters from the string.
+         * @tparam TPredIsSpace predicate of form bool (*)(cachar_t c) to find out if c is space
+         *
+         * If string is empty or contains only whitespace characters, string becomes empty.
+         */
+        template <typename TPredIsSpace = IsWhitespace>
+        inline void trim(const TPredIsSpace & isspace = TPredIsSpace());
+
+
+        /**
+         * @brief Returns a copy of this string whith removed leading whitespaces.
+         * Original string is not affected.
+         */
+        template <typename TPredIsSpace = IsWhitespace>
+        inline String trimmedBegin(const TPredIsSpace & isspace = TPredIsSpace()) const;
+
+        /**
+         * @brief Returns a copy of this string whith removed trailing whitespaces.
+         * Original string is not affected.
+         */
+        template <typename TPredIsSpace = IsWhitespace>
+        inline String trimmedEnd(const TPredIsSpace & isspace = TPredIsSpace()) const;
+
+        /**
+         * @brief Returns a copy of this string whith removed leading and trailing whitespaces.
+         * Original string is not affected.
+         */
+        template <typename TPredIsSpace = IsWhitespace>
+        inline String trimmed(const TPredIsSpace & isspace = TPredIsSpace()) const;
 
         inline Point2D<size_type> point2DOf(size_type index) const;
+        inline Point2D<size_type> point2DOf(const const_iterator & selfIterator) const;
 
-        inline Point2D<size_type> point2DOf(const const_iterator & selfIterator) const {
-            return point2DOf(
-                selfIterator - begin());
-        }
-
+        // these methods in fact return BasicSubstring<cachar_t>, but it can only be forward declared
+        // thus such a lifehack is used
         inline auto lineOf(const size_type & index) const;
-
-        inline auto lineOf(const const_iterator & iter) const { return lineOf(iter - begin()); }
-
+        inline auto lineOf(const const_iterator & iter) const;
 
     private:
 
         template<typename T>
-        constexpr std::enable_if_t<std_ext::is_numeric_v<T>,
+        inline constexpr std::enable_if_t<Vtem::is_numeric_v<T>,
         size_type> reservationSizeFor(const T & item);
 
-        template <size_t N>
-        constexpr size_t reservationSizeFor(const TChar (& charArr)[N]);
-
-
+        template <size_type N>
+        inline constexpr size_type reservationSizeFor(const cachar_t (& charArr)[N]);
 
         template<typename TString>
-        std::enable_if_t<! std_ext::is_numeric_v<TString>
-                         && ! std::is_pointer_v<TString>
-                         && ! std::is_same_v<TString, BasicSubstring<TChar> >,
+        inline std::enable_if_t<!Vtem::is_numeric_v<TString>
+                         &&  !std::is_pointer_v<TString>,
         size_type> reservationSizeFor(const TString & string);
 
-        size_type reservationSizeFor(const BasicSubstring<TChar> & substring);
-
-        size_type reservationSizeFor(const TChar * const & cString);
+        inline size_type reservationSizeFor(const cachar_t * const & cString);
 
         template<typename T1, typename... TN>
-        size_type reservationSizeFor(const T1 & item, const TN & ... items);
+        inline size_type reservationSizeFor(const T1 & item, const TN & ... items);
 
 
         template<typename T>
-        BasicString & affiliate(const T & item);
+        inline String & affiliate(const T & item);
 
         template<typename T1, typename... TN>
-        BasicString & affiliate(const T1 & item1, const TN & ... items);
+        inline String & affiliate(const T1 & item1, const TN & ... items);
 
     };
 
-    class Var; // forward declaration
 
-    using String = BasicString<cachar_t>;
-    String & operator+=(String & self, const char * cStr);
-
-    String & operator+=(String & self, const Var & var);
-    String & operator>>(const Var & var, String & string);
 
 }
 
-#include "var_string_impl.h"
+#include "var_string_inline_impl.h"
 
 
 

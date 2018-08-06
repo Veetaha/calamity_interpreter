@@ -8,7 +8,7 @@
 //#include "ast.h"
 #include "var_string.h"
 
-namespace Calamity {
+namespace Cala {
 
 	class Function {
 		String m_name;

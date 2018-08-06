@@ -3,12 +3,13 @@
 #include <lexertl/debug.hpp>
 #include <fstream>
 #include <cstdlib>
+#include "defs.h"
 #include "cui.h"
 #include "token.h"
-#include "std_ext.h"
+#include "vtem.h"
 
 int main (int argc, char ** argv) {
-    using namespace Calamity;
+    using namespace Cala;
     using namespace Cui;
     namespace ltl = lexertl;
     const auto err(fgnd(5, 1, 0));
@@ -40,7 +41,6 @@ int main (int argc, char ** argv) {
     using ltl_rules = ltl::basic_rules<cachar_t, cachar_t>;
     using ltl_state_machine = ltl::basic_state_machine<cachar_t>;
     using ltl_generator = ltl::basic_generator<ltl_rules, ltl_state_machine>;
-    using ltl_debug = ltl::basic_debug<ltl_state_machine, cachar_t>;
 
     ltl_rules rules;
     ltl_state_machine sm;
@@ -59,16 +59,16 @@ int main (int argc, char ** argv) {
     sm.minimise();
 
 #ifdef DEBUG_DUMP
-    ltl_debug::dump(sm, conout);
+    ltl::basic_debug<ltl_state_machine, cachar_t>::dump(sm, conout);
 #endif
 
     genFile << "#include <lexertl/match_results.hpp>\n\n"
-               "namespace Calamity {\n\t"
+               "namespace Cala {\n\t"
                "namespace ltlgen {\n\n";
     lexertl::table_based_cpp::generate_cpp("lookup", sm, false, genFile);
     genFile << "\n\n\t} // namespace ltlgen\n"
-               "} // namespace Calamity\n\n\n";
-
+               "} // namespace Cala\n\n\n";
+    
     genFile.close();
 
     conout << reverse
