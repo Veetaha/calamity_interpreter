@@ -5,9 +5,19 @@ set(BOOST_ROOT   "${INCLUDE_ROOT}/boost_1_67_0")
 set(LEXERTL_ROOT "${INCLUDE_ROOT}/lexertl")
 set(GTEST_ROOT   "${INCLUDE_ROOT}/googletest")
 
+#set(CMAKE_CXX_FLAGS "-g -std=gnu++2a             \
+#                     -Werror                     \
+#                     -Werror=unused              \
+#                     -Wall                       \
+#                     -Wextra                     \
+#                     -Wno-parentheses            \
+#                     -Wno-variadic-macros        \
+#                     -Wno-unused-function        \
+#                     -Werror=implicit-fallthrough")
+
+
 set(CMAKE_CXX_FLAGS "-g -std=gnu++2a             \
                      -Werror                     \
-                     -Werror=unused              \
                      -Wno-parentheses            \
                      -Wno-variadic-macros        \
                      -Wno-unused-function        \
@@ -19,7 +29,7 @@ file(GLOB SOURCES "src/*.cpp")
 # global include for all projects (use target_link_libraries otherwise)
 include_directories(include ${BOOST_ROOT} ${LEXERTL_ROOT} ${GTEST_ROOT})
 
-#add_compile_definitions(_DEFAULT_SOURCE=1) #some strange glibc macro warning supression
+add_compile_definitions(_DEFAULT_SOURCE=1) #some strange glibc macro warning supression
 
 
 add_library(calamity_core ${SOURCES})
