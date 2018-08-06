@@ -7,7 +7,7 @@ template<typename iter_type, typename id_type>
 void lookup (lexertl::match_results<iter_type, id_type> &results_)
 {
     using results = lexertl::match_results<iter_type, id_type>;
-//    using char_type = typename results::char_type;
+    using char_type = typename results::char_type;
     typename results::iter_type end_token_ = results_.second;
 skip:
     typename results::iter_type curr_ = results_.second;

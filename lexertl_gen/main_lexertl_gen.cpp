@@ -13,6 +13,7 @@ int main (int argc, char ** argv) {
     using namespace Cui;
     namespace ltl = lexertl;
     const auto err(fgnd(5, 1, 0));
+    std::locale::global(std::locale::classic());
 
     if (argc != 2){
         conout << err << bold
