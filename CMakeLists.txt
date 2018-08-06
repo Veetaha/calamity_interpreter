@@ -14,7 +14,7 @@ set(GTEST_ROOT   "${INCLUDE_ROOT}/googletest")
 #                     -Wno-variadic-macros        \
 #                     -Wno-unused-function        \
 #                     -Werror=implicit-fallthrough")
-
+#add_compile_definitions(_DEFAULT_SOURCE=1)         #some strange glibc macro warning supression
 
 set(CMAKE_CXX_FLAGS "-g -std=gnu++2a             \
                      -Werror                     \
@@ -29,7 +29,6 @@ file(GLOB SOURCES "src/*.cpp")
 # global include for all projects (use target_link_libraries otherwise)
 include_directories(include ${BOOST_ROOT} ${LEXERTL_ROOT} ${GTEST_ROOT})
 
-add_compile_definitions(_DEFAULT_SOURCE=1) #some strange glibc macro warning supression
 
 
 add_library(calamity_core ${SOURCES})
