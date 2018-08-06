@@ -11,8 +11,8 @@ set(CMAKE_CXX_FLAGS "-g -std=gnu++2a             \
                      -Wno-parentheses            \
                      -Wno-variadic-macros        \
                      -Wno-unused-function        \
-                     -Werror=implicit-fallthrough\
-                    CACHE STRING compiler flags")
+                     -Werror=implicit-fallthrough"
+                    CACHE STRING "compiler flags")
 
 
 file(GLOB SOURCES "src/*.cpp")
